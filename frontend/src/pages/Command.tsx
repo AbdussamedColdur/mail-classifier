@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { api } from '../api/client'
 import type { Mode, Option, Preview, Task } from '../api/types'
 import * as Ic from '../components/Icons'
-import { Seg } from '../components/Layout'
+import { Seg, TH_MAX, TH_MIN, ThresholdSlider, thText } from '../components/Layout'
 import { useApp, usePoll } from '../lib/app'
 import { MODE_LABEL, nf, opsText } from '../lib/format'
 
@@ -25,7 +25,7 @@ export default function Command() {
   const [list, setList] = useState<Option[]>([
     { key: 'Ödenmemiş', description: '' }, { key: 'Ödenmiş', description: '' }, { key: 'Fatura değil', description: '' },
   ])
-  const [th, setTh] = useState(0.8)
+  const [th, setTh] = useState({ apply: 0.85, ignore: 0.5 })
   const [act, setAct] = useState({ label: true, labelName: 'Ödenmemiş', star: true, archive: false, read: false })
   const [mode, setMode] = useState<Mode>('approve')
   const [tasks, setTasks] = useState<Task[]>([])
@@ -60,7 +60,7 @@ export default function Command() {
     if (!dryRun && !ops.length && mode !== 'report') return toast({ title: 'En az bir işlem seçin' })
     setStarting(true)
     try {
-      const { id } = await api.createTask({ query, question, options, threshold: th, actions: ops, mode, dryRun })
+      const { id } = await api.createTask({ query, question, options, applyThreshold: th.apply, ignoreThreshold: th.ignore, actions: ops, mode, dryRun })
       if (dryRun) { setDryTask(id); setDryScores(null) }
       toast({ title: dryRun ? 'Kuru çalıştırma başladı' : 'Görev başladı', sub: 'İlerlemeyi aşağıdaki listeden izleyebilirsiniz.' })
     } catch (e) {
@@ -69,8 +69,10 @@ export default function Command() {
     setStarting(false)
   }
 
-  const pass = dryScores ? dryScores.filter((s) => s >= th).length : null
-  const below = dryScores && pass !== null ? dryScores.length - pass : null
+  // Dry-run scores split into the three threshold zones.
+  const pass = dryScores ? dryScores.filter((s) => s >= th.apply).length : null
+  const ignored = dryScores ? dryScores.filter((s) => s <= th.ignore).length : null
+  const below = dryScores && pass !== null && ignored !== null ? dryScores.length - pass - ignored : null
   const n = dryScores?.length ?? 0
   const scope = preview?.matchCount
   const eta = scope ? Math.max(1, Math.round((scope * preview!.secondsPerEmail) / 60)) : null
@@ -136,24 +138,31 @@ export default function Command() {
 
           <Step n={4}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 2 }}>
-              <label htmlFor="esik" style={{ fontWeight: 600 }}>Güven eşiği</label>
-              <span className="num" style={{ marginLeft: 'auto', fontSize: 15, fontWeight: 600 }}>{th.toFixed(2)}</span>
+              <span style={{ fontWeight: 600 }}>Eşikler</span>
+              <span className="num" style={{ marginLeft: 'auto', fontSize: 15, fontWeight: 600 }}>{thText(th.apply, th.ignore)}</span>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--mut)', marginBottom: 8 }}>Puanı bu değerin altında kalan kararlar uygulanmaz, Onay Kuyruğu'na düşer.</div>
-            <input id="esik" type="range" min={0.5} max={0.99} step={0.01} value={th} onChange={(e) => setTh(Number(e.target.value))} style={{ width: '100%' }} />
-            <div className="num" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--mut)' }}><span>0.50</span><span>0.75</span><span>0.99</span></div>
+            <div style={{ fontSize: 12, color: 'var(--mut)', marginBottom: 8 }}>
+              “{options[0]?.key ?? '—'}” puanı {th.ignore.toFixed(2)} ya da altındaysa yalnızca kaydedilir, iki eşik arasındaysa Onay Kuyruğu'na düşer, {th.apply.toFixed(2)} ve üstündeyse uygulanır.
+            </div>
+            <ThresholdSlider apply={th.apply} ignore={th.ignore} onChange={(apply, ignore) => setTh({ apply, ignore: ignore ?? th.ignore })} />
+            <div className="num" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--mut)' }}><span>{TH_MIN.toFixed(2)}</span><span>{TH_MAX.toFixed(2)}</span></div>
             <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 10, background: 'var(--bar)' }}>
-              {n > 0 && pass !== null && <><div style={{ background: 'var(--acc)', width: (pass / n) * 100 + '%' }} /><div style={{ background: 'var(--am)', width: (below! / n) * 100 + '%' }} /></>}
+              {n > 0 && pass !== null && <>
+                <div style={{ background: 'var(--acc)', width: (pass / n) * 100 + '%' }} />
+                <div style={{ background: 'var(--am)', width: (below! / n) * 100 + '%' }} />
+                <div style={{ background: 'var(--line2)', width: (ignored! / n) * 100 + '%' }} />
+              </>}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 6, fontSize: 12, color: 'var(--mut)' }}>
               {dryScores ? (
                 <>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--acc)' }} />Eşiği geçen <span className="num" style={{ color: 'var(--tx)', fontWeight: 600 }}>{pass}</span></span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--acc)' }} />Uygulanacak <span className="num" style={{ color: 'var(--tx)', fontWeight: 600 }}>{pass}</span></span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--am)' }} />Onaya düşecek <span className="num" style={{ color: 'var(--tx)', fontWeight: 600 }}>{below}</span></span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--line2)' }} />Yalnızca kayıt <span className="num" style={{ color: 'var(--tx)', fontWeight: 600 }}>{ignored}</span></span>
                   <span>Kuru çalıştırmadaki {n} karara göre</span>
                 </>
               ) : (
-                <span>Eşiği geçecek ve onaya düşecek sayılar, kuru çalıştırma sonuçlarından hesaplanır.</span>
+                <span>Her bölgeye düşecek sayılar kuru çalıştırma sonuçlarından hesaplanır.</span>
               )}
             </div>
           </Step>
@@ -199,7 +208,7 @@ export default function Command() {
             <Dt>Kapsam</Dt><Dd>{scope !== undefined ? `${nf.format(scope)} e-posta` : 'Önizlenmedi'}</Dd>
             <Dt>Model</Dt><Dd>{status?.ollama.model ?? '—'} (yerel)</Dd>
             <Dt>Seçenekler</Dt><Dd>{options.map((o) => o.key).join(' / ')}</Dd>
-            <Dt>Eşik</Dt><Dd>{th.toFixed(2)}</Dd>
+            <Dt>Eşikler</Dt><Dd>{thText(th.apply, th.ignore)}</Dd>
             <Dt>İşlem</Dt><Dd>{ops.length ? opsText(ops) : 'İşlem seçilmedi'}</Dd>
             <Dt>Mod</Dt><Dd>{MODE_LABEL[mode]}</Dd>
             <Dt>Tahmini süre</Dt><Dd>{eta ? `~${eta} dk` : '—'}</Dd>

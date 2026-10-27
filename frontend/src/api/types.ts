@@ -45,7 +45,9 @@ export interface Action {
   scores: Score[]
   topKey: string
   topScore: number
-  threshold: number
+  applyThreshold: number
+  /** Yes/no decisions only. */
+  ignoreThreshold: number | null
   model: string
   latencyMs: number | null
   ruleId: number | null
@@ -73,10 +75,15 @@ export interface Rule {
   kind: RuleKind
   question: string
   options: Option[]
-  threshold: number
+  /** score ≥ this → act; for a category rule below it → approval queue */
+  applyThreshold: number
+  /** Yes/no rules only: score ≤ this → just recorded. */
+  ignoreThreshold: number | null
   actions: string[]
   mode: Mode
   modeLocked: boolean
+  /** Only suggest, even when the global dry mode is off. */
+  dryRun: boolean
   enabled: boolean
   stats7d: { triggered: number; undone: number }
 }
@@ -89,7 +96,8 @@ export interface Task {
   query: string
   question: string
   options: Option[]
-  threshold: number
+  applyThreshold: number
+  ignoreThreshold: number
   actions: string[]
   mode: Mode
   dryRun: boolean
@@ -106,7 +114,8 @@ export interface TaskInput {
   query: string
   question: string
   options: Option[]
-  threshold: number
+  applyThreshold: number
+  ignoreThreshold: number
   actions: string[]
   mode: Mode
   dryRun: boolean

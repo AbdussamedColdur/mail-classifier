@@ -79,3 +79,20 @@ body.dk { background: #0C0C0E; }
 .skel { background: var(--sub); border-radius: 6px; animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .5; } }
 .err-text { color: var(--rd); font-size: 12px; }
+
+/* Threshold slider: one or two native range inputs stacked over a zone track (ignore · approval · apply). */
+.th { position: relative; height: 22px; }
+.th-track { position: absolute; left: 7px; right: 7px; top: 9px; height: 4px; border-radius: 2px; overflow: hidden; background: var(--bar); }
+.th-track > div { position: absolute; top: 0; bottom: 0; }
+.mk .th input[type=range] { position: absolute; inset: 0; width: 100%; margin: 0; background: transparent; pointer-events: none;
+  -webkit-appearance: none; appearance: none; }
+.mk .th input[type=range]::-webkit-slider-runnable-track { background: transparent; height: 22px; }
+.mk .th input[type=range]::-moz-range-track { background: transparent; }
+.mk .th input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 14px; height: 14px; margin-top: 4px;
+  border-radius: 50%; background: var(--card); border: 2px solid var(--acc); cursor: pointer; }
+.mk .th input[type=range]::-moz-range-thumb { pointer-events: auto; width: 10px; height: 10px; border-radius: 50%; background: var(--card);
+  border: 2px solid var(--acc); cursor: pointer; }
+.mk .th input.th-ignore::-webkit-slider-thumb { border-color: var(--mut); }
+.mk .th input.th-ignore::-moz-range-thumb { border-color: var(--mut); }
+.mk .th input[type=range]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--acc); outline-offset: 2px; }
+.mk .th input[type=range]:focus-visible::-moz-range-thumb { outline: 2px solid var(--acc); outline-offset: 2px; }

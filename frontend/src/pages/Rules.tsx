@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api } from '../api/client'
 import type { Category, CategoryStats, Mode, Rule, RuleInput, RuleKind } from '../api/types'
 import * as Ic from '../components/Icons'
-import { Bar, Seg, Switch } from '../components/Layout'
+import { Bar, Seg, Switch, ThresholdSlider, thText } from '../components/Layout'
 import { useApp, useAsync, usePoll } from '../lib/app'
 import { MODE_COLORS, MODE_LABEL, opsText } from '../lib/format'
 
@@ -78,10 +78,11 @@ export default function Rules() {
         <div style={{ display: 'flex', gap: 16, padding: '7px 16px', background: 'var(--sub)', borderBottom: '1px solid var(--line)', borderRadius: '10px 10px 0 0', fontSize: 11, fontWeight: 500, color: 'var(--mut)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           <span style={{ flex: '0 0 44px' }}>Etkin</span>
           <span style={{ flex: '1 1 300px' }}>Kural / soru</span>
-          <span style={{ flex: '0 0 56px' }}>Eşik</span>
-          <span style={{ flex: '0 0 180px' }}>İşlem</span>
+          <span style={{ flex: '0 0 80px' }}>Eşik</span>
+          <span style={{ flex: '0 0 160px' }}>İşlem</span>
           <span style={{ flex: '0 0 130px' }}>Mod</span>
-          <span style={{ flex: '0 0 190px' }}>Son 7 gün</span>
+          <span style={{ flex: '0 0 44px' }} title="Kuru: Gmail'e yazmaz, yalnızca önerir">Kuru</span>
+          <span style={{ flex: '0 0 170px' }}>Son 7 gün</span>
           <span style={{ flex: '0 0 32px' }} />
         </div>
         {rules && all.filter(pass[tab]).length === 0 && <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--mut)' }}>Bu filtrede kural yok.</div>}
@@ -89,7 +90,7 @@ export default function Rules() {
           const warn = needsCare(r)
           const op = r.enabled ? 1 : 0.5
           const [mBg, mFg] = MODE_COLORS[r.mode]
-          const next = Math.min(0.95, r.threshold + 0.1)
+          const next = Math.min(0.95, r.applyThreshold + 0.1)
           const uFg = warn ? 'var(--am)' : 'var(--mut)'
           return (
             <div key={r.id} className="row" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 16px', padding: '12px 16px', borderBottom: '1px solid var(--line)', position: 'relative' }}>
@@ -101,10 +102,11 @@ export default function Rules() {
                 </div>
                 <div className="ellipsis" style={{ color: 'var(--mut)' }}>“{r.question}”</div>
               </div>
-              <span className="num" style={{ flex: '0 0 56px', fontWeight: 600, opacity: op }}>{r.threshold.toFixed(2)}</span>
-              <span style={{ flex: '0 0 180px', fontSize: 12, fontWeight: 500, opacity: op }}>{opsText(r.actions)}</span>
+              <span className="num" title={r.ignoreThreshold === null ? 'Uygulama eşiği' : 'Görmezden gelme – uygulama eşiği'} style={{ flex: '0 0 80px', fontWeight: 600, opacity: op }}>{thText(r.applyThreshold, r.ignoreThreshold)}</span>
+              <span style={{ flex: '0 0 160px', fontSize: 12, fontWeight: 500, opacity: op }}>{opsText(r.actions)}</span>
               <span style={{ flex: '0 0 130px', opacity: op }}><span className="badge" style={{ padding: '2px 8px', background: mBg, color: mFg }}>{MODE_LABEL[r.mode]}</span></span>
-              <div style={{ flex: '0 0 190px', opacity: op }}>
+              <span style={{ flex: '0 0 44px', opacity: op }}><Switch on={r.dryRun} label={r.name + (r.dryRun ? ' kuralının kuru modunu kapat' : ' kuralını kuru moda al')} onClick={() => patch(r, { dryRun: !r.dryRun })} /></span>
+              <div style={{ flex: '0 0 170px', opacity: op }}>
                 {r.stats7d.triggered > 0 ? (
                   <>
                     <div style={{ fontSize: 12 }}><span className="num" style={{ fontWeight: 600 }}>{r.stats7d.triggered}</span> <span style={{ color: 'var(--mut)' }}>tetiklenme ·</span> <span className="num" style={{ fontWeight: 600, color: uFg }}>{r.stats7d.undone}</span> <span style={{ color: uFg }}>geri alındı</span></div>
@@ -131,7 +133,7 @@ export default function Rules() {
                 <div style={{ flex: '1 1 100%', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 12px', marginLeft: 60, padding: '8px 12px', borderRadius: 8, background: 'var(--amBg)', color: 'var(--am)', fontSize: 12 }}>
                   <Ic.Warn s={14} />
                   <span style={{ flex: '1 1 280px', fontWeight: 500 }}>Bu kuralın kararlarının %{Math.round(ratio(r) * 100)}'i geri alındı. Eşiği {next.toFixed(2)}'e yükseltmeyi ya da modu “Onaya gönder” yapmayı düşünün.</span>
-                  <button type="button" onClick={() => patch(r, { threshold: Number(next.toFixed(2)) })} style={warnBtn}>Eşiği {next.toFixed(2)} yap</button>
+                  <button type="button" onClick={() => patch(r, { applyThreshold: Number(next.toFixed(2)) })} style={warnBtn}>Eşiği {next.toFixed(2)} yap</button>
                   {r.mode !== 'approve' && !r.modeLocked && <button type="button" onClick={() => patch(r, { mode: 'approve' })} style={warnBtn}>Onaya gönder</button>}
                 </div>
               )}
@@ -163,7 +165,8 @@ function RuleEditor({ rule, categories, onClose, onSaved }: { rule: Rule | null;
   const [category, setCategory] = useState<string>(rule?.category ?? '')
   const [kind, setKind] = useState<RuleKind>(rule?.kind ?? 'question')
   const [question, setQuestion] = useState(rule?.question ?? '')
-  const [th, setTh] = useState(rule?.threshold ?? 0.8)
+  const [th, setTh] = useState({ apply: rule?.applyThreshold ?? 0.85, ignore: rule?.ignoreThreshold ?? 0.5 })
+  const [dry, setDry] = useState(rule?.dryRun ?? true)
   const [mode, setMode] = useState<Mode>(rule?.mode ?? 'approve')
   const [label, setLabel] = useState(labelOf(rule?.actions ?? ['label:']))
   const [flags, setFlags] = useState({
@@ -182,7 +185,8 @@ function RuleEditor({ rule, categories, onClose, onSaved }: { rule: Rule | null;
   const save = async () => {
     setSaving(true)
     try {
-      const body = { name: name.trim(), question: question.trim(), threshold: th, actions: ops, mode }
+      const body = { name: name.trim(), question: question.trim(), applyThreshold: th.apply,
+        ignoreThreshold: effKind === 'question' ? th.ignore : null, actions: ops, mode, dryRun: dry }
       if (rule) await api.patchRule(rule.id, body)
       else await api.createRule({ ...body, category: category || null, kind: effKind, enabled: true })
       onSaved()
@@ -229,10 +233,15 @@ function RuleEditor({ rule, categories, onClose, onSaved }: { rule: Rule | null;
         <textarea rows={2} value={question} onChange={(e) => setQuestion(e.target.value)} style={{ padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 8, background: 'var(--card)', resize: 'vertical', fontWeight: 400 }} />
       </label>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
-        <label style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>
-          <span style={{ display: 'flex' }}>Güven eşiği<span className="num" style={{ marginLeft: 'auto', fontWeight: 600 }}>{th.toFixed(2)}</span></span>
-          <input type="range" min={0.5} max={0.99} step={0.01} value={th} onChange={(e) => setTh(Number(e.target.value))} />
-        </label>
+        <div role="group" aria-label="Eşikler" style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>
+          <span style={{ display: 'flex' }}>{effKind === 'question' ? 'Eşikler' : 'Uygulama eşiği'}
+            <span className="num" style={{ marginLeft: 'auto', fontWeight: 600 }}>{thText(th.apply, effKind === 'question' ? th.ignore : null)}</span></span>
+          <ThresholdSlider apply={th.apply} ignore={effKind === 'question' ? th.ignore : null}
+            onChange={(apply, ignore) => setTh({ apply, ignore: ignore ?? th.ignore })} />
+          <span style={{ fontWeight: 400, color: 'var(--mut)' }}>{effKind === 'question'
+            ? `“Evet” ≤ ${th.ignore.toFixed(2)} yalnızca kaydedilir · arası onaya düşer · ≥ ${th.apply.toFixed(2)} uygulanır`
+            : `Kategori olasılığı ${th.apply.toFixed(2)} altındaysa onaya düşer, üstündeyse uygulanır`}</span>
+        </div>
         <label style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>Mod
           <select className="select" value={mode} disabled={rule?.modeLocked} title={rule?.modeLocked ? 'Bu kuralın modu sabittir' : undefined} onChange={(e) => setMode(e.target.value as Mode)} style={{ height: 36, fontWeight: 400 }}>
             {(Object.keys(MODE_LABEL) as Mode[]).map((m) => <option key={m} value={m}>{MODE_LABEL[m]}</option>)}
@@ -246,7 +255,11 @@ function RuleEditor({ rule, categories, onClose, onSaved }: { rule: Rule | null;
         {box('archive', 'Arşivle', noArchive)}
         {box('read', 'Okundu işaretle')}
       </div>
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginRight: 'auto', fontSize: 12 }}>
+          <Switch on={dry} label="Kuru" onClick={() => setDry(!dry)} />
+          <span><span style={{ fontWeight: 500 }}>Kuru</span> <span style={{ color: 'var(--mut)' }}>— genel kuru mod kapalıyken de Gmail'e yazmaz, yalnızca önerir</span></span>
+        </span>
         <button type="button" className="btn ib" onClick={onClose}>Vazgeç</button>
         <button type="button" className="btn-p" disabled={saving || !name.trim() || question.trim().length < 3} onClick={save}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</button>
       </div>

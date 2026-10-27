@@ -37,6 +37,12 @@ DESCRIPTION = {c["key"]: c["description"] for c in CATEGORIES}
 # Security mail must stay in the inbox: no rule scoped to these categories may archive.
 NEVER_ARCHIVE = {"Hesap"}
 
+# Thresholds. Category rules have only an apply threshold: below it the e-mail goes to the
+# approval queue, so undecided mail is always shown. Yes/no rules also have an ignore threshold:
+# P(yes) ≤ ignore → only recorded; between → approval; ≥ apply → acted on.
+THRESHOLD_RANGE = (0.20, 0.99)
+DEFAULT_IGNORE = 0.50
+
 
 def yes_no(question: str) -> list[dict[str, str]]:
     return [
@@ -91,11 +97,12 @@ def update(values: dict[str, Any]) -> dict[str, Any]:
 
 
 def insert_starter(con: sqlite3.Connection, rule: tuple) -> None:
+    """Starter rules begin dry: they only suggest until switched on one by one."""
     name, cat, question, options, th, actions, mode, locked = rule
     con.execute(
-        "INSERT INTO rules(name, category, question, options, threshold, actions, mode, mode_locked, enabled, created_at) "
-        "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 1, ?)",
-        (name, cat, question, db.j(options), th, db.j(actions), mode, int(locked), db.now()),
+        "INSERT INTO rules(name, category, question, options, apply_threshold, ignore_threshold, actions, mode, mode_locked, "
+        "dry_run, enabled, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)",
+        (name, cat, question, db.j(options), th, DEFAULT_IGNORE if options else None, db.j(actions), mode, int(locked), db.now()),
     )
 
 

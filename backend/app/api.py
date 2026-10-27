@@ -6,7 +6,7 @@ import io
 import shutil
 import subprocess
 import sys
-from typing import Any, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
@@ -18,6 +18,7 @@ from . import classifier, config, db, engine, gmail
 router = APIRouter(prefix="/api")
 
 Mode = Literal["report", "approve", "apply"]
+Threshold = Annotated[float, Field(ge=config.THRESHOLD_RANGE[0], le=config.THRESHOLD_RANGE[1])]
 KNOWN_MODELS = ["d3:4b", "d3:9b"]
 
 
@@ -30,7 +31,7 @@ def _scores(raw: str) -> list[dict[str, Any]]:
 ACTION_SQL = """
 SELECT a.id, a.status, a.ops, a.error, a.queued, a.created_at, a.updated_at,
        d.source, d.rule_id, d.task_id, d.category, d.question, d.scores, d.top_key, d.top_score,
-       d.threshold, d.model, d.latency_ms,
+       d.apply_threshold, d.ignore_threshold, d.model, d.latency_ms,
        e.id AS email_id, e.from_name, e.from_addr, e.subject, e.snippet, e.received_at
 FROM actions a JOIN decisions d ON d.id = a.decision_id JOIN emails e ON e.id = a.email_id
 """
@@ -52,7 +53,8 @@ def _action_out(r: dict[str, Any]) -> dict[str, Any]:
         "scores": _scores(r["scores"]),
         "topKey": r["top_key"],
         "topScore": r["top_score"],
-        "threshold": r["threshold"],
+        "applyThreshold": r["apply_threshold"],
+        "ignoreThreshold": r["ignore_threshold"],
         "model": r["model"],
         "latencyMs": r["latency_ms"],
         "ruleId": r["rule_id"],
@@ -205,7 +207,7 @@ def queue_bulk(body: BulkIn) -> dict[str, Any]:
 @router.post("/queue/approve-passing")
 def queue_approve_passing() -> dict[str, Any]:
     ids = [r["id"] for r in db.rows(
-        "SELECT a.id FROM actions a JOIN decisions d ON d.id = a.decision_id WHERE a.status = 'pending' AND d.top_score >= d.threshold")]
+        "SELECT a.id FROM actions a JOIN decisions d ON d.id = a.decision_id WHERE a.status = 'pending' AND d.top_score >= d.apply_threshold")]
     return {"results": {i: _ok(engine.approve, i)["status"] for i in ids}}
 
 
@@ -262,7 +264,7 @@ def actions_csv(range: str = "7d", status: Optional[str] = None, q: Optional[str
     w.writerow(["Zaman", "Gönderen", "Adres", "Konu", "Kural", "Kategori", "Puan", "Eşik", "İşlem", "Durum", "Hata"])
     for r in _log_rows(range, status, q):
         w.writerow([r["createdAt"], r["from"], r["addr"], r["subject"], r["source"], r["category"],
-                    f"{r['topScore']:.2f}", f"{r['threshold']:.2f}", " + ".join(r["ops"]), STATUS_TR.get(r["status"], r["status"]), r["error"] or ""])
+                    f"{r['topScore']:.2f}", f"{r['applyThreshold']:.2f}", " + ".join(r["ops"]), STATUS_TR.get(r["status"], r["status"]), r["error"] or ""])
     name = f"kayitlar_{db.now()[:10]}.csv"
     return Response(("﻿" + buf.getvalue()).encode("utf-8"), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
@@ -276,19 +278,33 @@ class RuleIn(BaseModel):
     # category: act on the category decision; question: ask own yes/no question (only in `category` if set)
     kind: Optional[Literal["category", "question"]] = None
     question: str = Field(min_length=3, max_length=500)
-    threshold: float = Field(ge=0.5, le=0.99)
+    applyThreshold: Threshold
+    ignoreThreshold: Optional[Threshold] = None   # yes/no rules; DEFAULT_IGNORE when left out
     actions: list[str]
     mode: Mode
+    dryRun: bool = True
     enabled: bool = True
 
 
 class RulePatch(BaseModel):
     name: Optional[str] = None
     question: Optional[str] = None
-    threshold: Optional[float] = Field(default=None, ge=0.5, le=0.99)
+    applyThreshold: Optional[Threshold] = None
+    ignoreThreshold: Optional[Threshold] = None
     actions: Optional[list[str]] = None
     mode: Optional[Mode] = None
+    dryRun: Optional[bool] = None
     enabled: Optional[bool] = None
+
+
+def _ignore(yes_no: bool, apply_th: float, ignore_th: float | None) -> float | None:
+    """Category rules have no ignore threshold; a yes/no one must sit below the apply threshold."""
+    if not yes_no:
+        return None
+    ignore_th = config.DEFAULT_IGNORE if ignore_th is None else ignore_th
+    if ignore_th >= apply_th:
+        raise HTTPException(422, "Görmezden gelme eşiği uygulama eşiğinden küçük olmalı.")
+    return ignore_th
 
 
 def _rule_out(r: dict[str, Any]) -> dict[str, Any]:
@@ -299,8 +315,9 @@ def _rule_out(r: dict[str, Any]) -> dict[str, Any]:
     options = db.unj(r["options"], [])
     return {
         "id": r["id"], "name": r["name"], "category": r["category"], "kind": "question" if options else "category",
-        "question": r["question"], "options": options, "threshold": r["threshold"], "actions": db.unj(r["actions"], []),
-        "mode": r["mode"], "modeLocked": bool(r["mode_locked"]), "enabled": bool(r["enabled"]),
+        "question": r["question"], "options": options, "applyThreshold": r["apply_threshold"],
+        "ignoreThreshold": r["ignore_threshold"], "actions": db.unj(r["actions"], []), "mode": r["mode"],
+        "modeLocked": bool(r["mode_locked"]), "dryRun": bool(r["dry_run"]), "enabled": bool(r["enabled"]),
         "stats7d": {"triggered": st["triggered"] or 0, "undone": st["undone"] or 0},
     }
 
@@ -331,10 +348,13 @@ def create_rule(body: RuleIn) -> dict[str, Any]:
     kind = body.kind or ("category" if body.category else "question")
     if kind == "category" and not body.category:
         raise HTTPException(422, "Kategori kuralı için bir kategori seçin.")
+    ignore_th = _ignore(kind == "question", body.applyThreshold, body.ignoreThreshold)
     rid = db.execute(
-        "INSERT INTO rules(name, category, question, options, threshold, actions, mode, enabled, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO rules(name, category, question, options, apply_threshold, ignore_threshold, actions, mode, dry_run, enabled, created_at) "
+        "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (body.name, body.category, body.question, db.j([] if kind == "category" else config.yes_no(body.question)),
-         body.threshold, db.j(_valid_ops(body.actions, body.category)), body.mode, int(body.enabled), db.now()))
+         body.applyThreshold, ignore_th, db.j(_valid_ops(body.actions, body.category)), body.mode, int(body.dryRun),
+         int(body.enabled), db.now()))
     return _rule_out(db.one("SELECT * FROM rules WHERE id = ?", (rid,)))
 
 
@@ -347,11 +367,16 @@ def patch_rule(rule_id: int, body: RulePatch) -> dict[str, Any]:
     data = body.model_dump(exclude_none=True)
     if r["mode_locked"] and data.get("mode", r["mode"]) != r["mode"]:
         raise HTTPException(422, "Bu kuralın modu değiştirilemez.")
-    for key in ("name", "threshold", "mode"):
+    for key in ("name", "mode"):
         if key in data:
             sets[key] = data[key]
-    if "enabled" in data:
-        sets["enabled"] = int(data["enabled"])
+    for key, col in (("enabled", "enabled"), ("dryRun", "dry_run")):
+        if key in data:
+            sets[col] = int(data[key])
+    if "applyThreshold" in data or "ignoreThreshold" in data:
+        sets["apply_threshold"] = data.get("applyThreshold", r["apply_threshold"])
+        sets["ignore_threshold"] = _ignore(bool(db.unj(r["options"], [])), sets["apply_threshold"],
+                                           data.get("ignoreThreshold", r["ignore_threshold"]))
     if "actions" in data:
         sets["actions"] = db.j(_valid_ops(data["actions"], r["category"]))
     if "question" in data and data["question"] != r["question"]:
@@ -384,7 +409,8 @@ class TaskIn(BaseModel):
     query: str = Field(min_length=1)
     question: str = Field(min_length=3, max_length=500)
     options: list[Option] = Field(min_length=2, max_length=8)
-    threshold: float = Field(ge=0.5, le=0.99)
+    applyThreshold: Threshold
+    ignoreThreshold: Threshold = config.DEFAULT_IGNORE  # on the first option's score
     actions: list[str]
     mode: Mode
     dryRun: bool = False
@@ -393,7 +419,8 @@ class TaskIn(BaseModel):
 def _task_out(t: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": t["id"], "name": t["name"], "query": t["query"], "question": t["question"],
-        "options": db.unj(t["options"]), "threshold": t["threshold"], "actions": db.unj(t["actions"]),
+        "options": db.unj(t["options"]), "applyThreshold": t["apply_threshold"], "ignoreThreshold": t["ignore_threshold"],
+        "actions": db.unj(t["actions"]),
         "mode": t["mode"], "dryRun": bool(t["dry_run"]), "status": t["status"],
         "processed": t["processed"], "total": t["total"], "passed": t["passed"],
         "needsApproval": t["needs_approval"], "error": t["error"], "createdAt": t["created_at"],
@@ -417,10 +444,12 @@ def create_task(body: TaskIn) -> dict[str, Any]:
         o["description"] = o["description"] or o["key"]
     name = body.question if len(body.question) <= 48 else body.question[:47] + "…"
     mode = "report" if body.dryRun else body.mode
+    ignore_th = _ignore(True, body.applyThreshold, body.ignoreThreshold)
     tid = db.execute(
-        "INSERT INTO tasks(name, query, question, options, threshold, actions, mode, dry_run, status, created_at) "
-        "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 'running', ?)",
-        (name, body.query, body.question, db.j(options), body.threshold, db.j(_valid_ops(body.actions, None)), mode, int(body.dryRun), db.now()))
+        "INSERT INTO tasks(name, query, question, options, apply_threshold, ignore_threshold, actions, mode, dry_run, status, created_at) "
+        "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 'running', ?)",
+        (name, body.query, body.question, db.j(options), body.applyThreshold, ignore_th, db.j(_valid_ops(body.actions, None)),
+         mode, int(body.dryRun), db.now()))
     engine.start_task(tid)
     return {"id": tid}
 

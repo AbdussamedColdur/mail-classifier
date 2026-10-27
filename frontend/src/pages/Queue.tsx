@@ -161,7 +161,7 @@ export default function Queue() {
                         <span style={{ flex: '0 0 60px', fontSize: 12, fontWeight: top ? 600 : 400 }}>{o.key}</span>
                         <div style={{ position: 'relative', flex: '1 1 auto' }}>
                           <Bar value={o.score} h={14} color={top ? 'var(--acc)' : 'var(--line2)'} track="var(--sub)" />
-                          <div aria-hidden="true" style={{ position: 'absolute', left: Math.round(x.threshold * 100) + '%', top: -3, bottom: -3, width: 0, borderLeft: '1px dashed var(--mut)' }} />
+                          <div aria-hidden="true" style={{ position: 'absolute', left: Math.round(x.applyThreshold * 100) + '%', top: -3, bottom: -3, width: 0, borderLeft: '1px dashed var(--mut)' }} />
                         </div>
                         <span className="num" style={{ flex: '0 0 36px', textAlign: 'right', fontSize: 12, fontWeight: top ? 600 : 400 }}>{score(o.score)}</span>
                       </div>
@@ -170,7 +170,9 @@ export default function Queue() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 12, color: 'var(--mut)' }}>
                   <span aria-hidden="true" style={{ width: 10, borderTop: '1px dashed var(--mut)' }} />
-                  Eşik {score(x.threshold)} · {x.topScore >= x.threshold ? 'eşik geçildi, kural modu onay istiyor' : 'en yüksek puan eşiğin altında, onaya gönderildi'}
+                  {x.ignoreThreshold === null ? `Eşik ${score(x.applyThreshold)}` : `Eşikler ${score(x.ignoreThreshold)}–${score(x.applyThreshold)}`} · {x.topScore >= x.applyThreshold
+                    ? 'eşik geçildi, kural modu onay istiyor'
+                    : x.ignoreThreshold === null ? 'kategori olasılığı eşiğin altında, onaya gönderildi' : '“Evet” puanı iki eşiğin arasında, onaya gönderildi'}
                 </div>
               </div>
               <div>

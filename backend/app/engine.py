@@ -126,14 +126,12 @@ def run_rules(settings: dict[str, Any], email: dict[str, Any], rules: list[dict[
         if not options:  # a category rule acts on the category decision itself
             answered.append((rule, cat, config.CATEGORY_QUESTION, category))
             continue
-        result = classifier.classify(settings, content, rule["question"], options)
-        if result.top[0] != options[0]["key"]:
-            continue
-        answered.append((rule, result, rule["question"], options[0]["key"]))
+        answered.append((rule, classifier.classify(settings, content, rule["question"], options), rule["question"], options[0]["key"]))
 
     db.execute("UPDATE emails SET category = ?, category_scores = ? WHERE id = ?", (category, db.j(cat.scores), email["id"]))
     for rule, result, question, target in answered:
-        decide(settings, email, result, question, target, rule["threshold"], db.unj(rule["actions"], []), rule["mode"],
+        decide(email, result, question, target, rule["apply_threshold"], rule["ignore_threshold"],
+               db.unj(rule["actions"], []), rule["mode"], dry=bool(settings["dryRun"] or rule["dry_run"]),
                rule_id=rule["id"], source=rule["name"], category=category)
 
     db.execute("UPDATE emails SET processed_at = ?, error = NULL WHERE id = ?", (db.now(), email["id"]))
@@ -143,22 +141,25 @@ def _label_of(ops: list[str]) -> str | None:
     return next((op.split(":", 1)[1] for op in ops if op.startswith("label:")), None)
 
 
-def decide(settings, email, result: classifier.Result, question: str, target: str, threshold: float,
-           ops: list[str], mode: str, *, rule_id=None, task_id=None, source: str, category: str | None) -> str:
-    """Record the decision and either report it, queue it or apply it. Returns the action status."""
+def decide(email, result: classifier.Result, question: str, target: str, apply_th: float, ignore_th: float | None,
+           ops: list[str], mode: str, *, dry: bool, rule_id=None, task_id=None, source: str, category: str | None) -> str:
+    """Record the decision, then (unless the score is at or below the ignore threshold) report it,
+    queue it or apply it. Returns the action status, or "recorded" when no action was made."""
     score = result.scores.get(target, 0.0)
     decision_id = db.execute(
-        "INSERT INTO decisions(email_id, rule_id, task_id, source, category, question, scores, top_key, top_score, threshold, model, latency_ms, created_at) "
-        "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO decisions(email_id, rule_id, task_id, source, category, question, scores, top_key, top_score, "
+        "apply_threshold, ignore_threshold, model, latency_ms, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (email["id"], rule_id, task_id, source, category, question, db.j(result.scores), target, score,
-         threshold, result.model, result.latency_ms, db.now()),
+         apply_th, ignore_th, result.model, result.latency_ms, db.now()),
     )
+    if ignore_th is not None and score <= ignore_th:
+        return "recorded"
     if mode == "report":
         status, queued = "reported", 0
-    elif mode == "approve" or score < threshold:
+    elif mode == "approve" or score < apply_th:
         status, queued = "pending", 1
     else:
-        status, queued = ("suggested" if settings["dryRun"] else "applied"), 0
+        status, queued = ("suggested" if dry else "applied"), 0
     action_id = db.execute(
         "INSERT INTO actions(decision_id, email_id, ops, status, queued, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?)",
         (decision_id, email["id"], db.j(ops), "pending" if status == "applied" else status, queued, db.now(), db.now()),
@@ -175,6 +176,12 @@ def _action(action_id: int) -> dict[str, Any]:
     if not a:
         raise KeyError(action_id)
     return a
+
+
+def _dry(a: dict[str, Any]) -> bool:
+    """Global dry mode, or the dry flag of the rule that made this action."""
+    r = db.one("SELECT r.dry_run FROM decisions d JOIN rules r ON r.id = d.rule_id WHERE d.id = ?", (a["decision_id"],))
+    return bool(config.get()["dryRun"] or (r and r["dry_run"]))
 
 
 def _set(action_id: int, status: str, **extra: Any) -> None:
@@ -212,7 +219,7 @@ def approve(action_id: int, category: str | None = None) -> str:
         ops = db.unj(rule["actions"]) if rule else [f"label:{category}"]
         db.execute("UPDATE decisions SET category = ? WHERE id = ?", (category, a["decision_id"]))
         db.execute("UPDATE emails SET category = ? WHERE id = ?", (category, a["email_id"]))
-    if config.get()["dryRun"]:
+    if _dry(a):
         _set(action_id, "suggested", ops=db.j(ops))
         return "suggested"
     return apply(action_id, ops)
@@ -245,9 +252,10 @@ def redo(action_id: int) -> str:
 
 
 def retry(action_id: int) -> str:
-    if _action(action_id)["status"] != "error":
-        return _action(action_id)["status"]
-    if config.get()["dryRun"]:
+    a = _action(action_id)
+    if a["status"] != "error":
+        return a["status"]
+    if _dry(a):
         _set(action_id, "suggested", error=None)
         return "suggested"
     return apply(action_id)
@@ -311,19 +319,13 @@ def _run_task(task_id: int, stop: threading.Event) -> None:
             email = db.one("SELECT * FROM emails WHERE id = ?", (msg_id,)) or store_email(acc["id"], gmail.fetch(svc, msg_id))
             content = text.for_model(email, int(settings["maxChars"]), bool(settings["stripQuotes"]))
             result = classifier.classify(settings, content, t["question"], options)
-            target = options[0]["key"]
-            if result.top[0] == target:
-                status = decide(settings, email, result, t["question"], target, t["threshold"], ops, t["mode"],
-                                task_id=task_id, source=t["name"], category=_label_of(ops) or email.get("category"))
+            # Every decision is kept, also the ignored ones, so the threshold preview can use the scores.
+            status = decide(email, result, t["question"], options[0]["key"], t["apply_threshold"], t["ignore_threshold"],
+                            ops, t["mode"], dry=bool(settings["dryRun"]), task_id=task_id, source=t["name"],
+                            category=_label_of(ops) or email.get("category"))
+            if status != "recorded":
                 col = "needs_approval" if status == "pending" else "passed"
                 db.execute(f"UPDATE tasks SET {col} = {col} + 1 WHERE id = ?", (task_id,))
-            else:
-                # Still keep the scores so the threshold preview can use them.
-                db.execute(
-                    "INSERT INTO decisions(email_id, task_id, source, question, scores, top_key, top_score, threshold, model, latency_ms, created_at) "
-                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (email["id"], task_id, t["name"], t["question"], db.j(result.scores), result.top[0], result.top[1],
-                     t["threshold"], result.model, result.latency_ms, db.now()))
             db.execute("UPDATE tasks SET processed = processed + 1 WHERE id = ?", (task_id,))
         db.execute("UPDATE tasks SET status = 'done' WHERE id = ?", (task_id,))
     except (gmail.GmailError, gmail.AuthExpired, classifier.ModelError) as e:

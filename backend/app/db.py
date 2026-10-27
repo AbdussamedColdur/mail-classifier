@@ -10,7 +10,7 @@ from typing import Any, Iterator
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 DB_PATH = DATA_DIR / "mailkarar.db"
-SCHEMA_VERSION = 2  # PRAGMA user_version; SCHEMA below is always the latest layout
+SCHEMA_VERSION = 3  # PRAGMA user_version; SCHEMA below is always the latest layout
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS settings (
@@ -49,10 +49,12 @@ CREATE TABLE IF NOT EXISTS rules (
   category TEXT,                              -- NULL: independent yes/no question
   question TEXT NOT NULL,
   options TEXT NOT NULL DEFAULT '[]',
-  threshold REAL NOT NULL,
+  apply_threshold REAL NOT NULL,              -- score ≥ this → act (when the mode allows)
+  ignore_threshold REAL,                      -- yes/no rules only: score ≤ this → just record; NULL for category rules
   actions TEXT NOT NULL,
   mode TEXT NOT NULL,                         -- report | approve | apply
   mode_locked INTEGER NOT NULL DEFAULT 0,     -- 1: the mode cannot be changed (Oltalama → always approve)
+  dry_run INTEGER NOT NULL DEFAULT 1,         -- 1: only suggest, even when the global dry mode is off
   enabled INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL
 );
@@ -62,7 +64,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   query TEXT NOT NULL,
   question TEXT NOT NULL,
   options TEXT NOT NULL,
-  threshold REAL NOT NULL,
+  apply_threshold REAL NOT NULL,
+  ignore_threshold REAL NOT NULL,
   actions TEXT NOT NULL,
   mode TEXT NOT NULL,
   dry_run INTEGER NOT NULL,
@@ -85,7 +88,8 @@ CREATE TABLE IF NOT EXISTS decisions (
   scores TEXT NOT NULL,
   top_key TEXT NOT NULL,
   top_score REAL NOT NULL,
-  threshold REAL NOT NULL,
+  apply_threshold REAL NOT NULL,
+  ignore_threshold REAL,
   model TEXT NOT NULL,
   latency_ms INTEGER,
   created_at TEXT NOT NULL

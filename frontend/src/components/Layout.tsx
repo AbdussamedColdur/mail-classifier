@@ -113,6 +113,37 @@ export function Seg<T extends string>({ items, value, onChange, label, inset }: 
   )
 }
 
+export const TH_MIN = 0.2
+export const TH_MAX = 0.99
+const r2 = (v: number) => Math.round(v * 100) / 100
+
+/**
+ * Apply threshold alone (category rules: below it → approval) or an ignore–apply range (yes/no:
+ * ≤ ignore → recorded only, between → approval, ≥ apply → acted on). The track shows the zones.
+ */
+export function ThresholdSlider({ apply, ignore, onChange, id }: { apply: number; ignore: number | null; onChange: (apply: number, ignore: number | null) => void; id?: string }) {
+  const at = (v: number) => ((v - TH_MIN) / (TH_MAX - TH_MIN)) * 100 + '%'
+  const low = ignore ?? TH_MIN
+  return (
+    <div className="th">
+      <div className="th-track" aria-hidden="true">
+        {ignore !== null && <div style={{ left: 0, width: at(ignore), background: 'var(--line2)' }} />}
+        <div style={{ left: at(low), right: `calc(100% - ${at(apply)})`, background: 'var(--am)' }} />
+        <div style={{ left: at(apply), right: 0, background: 'var(--acc)' }} />
+      </div>
+      {ignore !== null && (
+        <input type="range" className="th-ignore" aria-label="Görmezden gelme eşiği" min={TH_MIN} max={TH_MAX} step={0.01} value={ignore}
+          onChange={(e) => onChange(apply, Math.min(r2(Number(e.target.value)), r2(apply - 0.01)))} />
+      )}
+      <input id={id} type="range" aria-label="Uygulama eşiği" min={TH_MIN} max={TH_MAX} step={0.01} value={apply}
+        onChange={(e) => onChange(Math.max(r2(Number(e.target.value)), ignore === null ? TH_MIN : r2(ignore + 0.01)), ignore)} />
+    </div>
+  )
+}
+
+/** "0.85" for a category rule, "0.50–0.85" for a yes/no one. */
+export const thText = (apply: number, ignore: number | null) => (ignore === null ? apply.toFixed(2) : `${ignore.toFixed(2)}–${apply.toFixed(2)}`)
+
 /** Thin score bar used across the panel, queue and detail views. */
 export function Bar({ value, h = 4, color = 'var(--acc)', track = 'var(--bar)', width }: { value: number; h?: number; color?: string; track?: string; width?: number | string }) {
   return (

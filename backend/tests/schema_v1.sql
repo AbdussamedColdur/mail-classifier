@@ -1,0 +1,92 @@
+-- The database layout before versioning (v1), frozen from commit 86fa88e for the migration test.
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS accounts (
+  id INTEGER PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ok',          -- ok | expired
+  scopes TEXT NOT NULL DEFAULT '[]',
+  last_sync TEXT,
+  error TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS emails (
+  id TEXT PRIMARY KEY,                        -- Gmail message id
+  account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  thread_id TEXT,
+  from_name TEXT,
+  from_addr TEXT,
+  subject TEXT,
+  snippet TEXT,
+  body TEXT,
+  received_at TEXT,
+  labels TEXT NOT NULL DEFAULT '[]',
+  category TEXT,
+  category_scores TEXT,
+  fetched_at TEXT NOT NULL,
+  processed_at TEXT,
+  error TEXT
+);
+CREATE TABLE IF NOT EXISTS rules (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT,                              -- NULL: independent yes/no question
+  question TEXT NOT NULL,
+  options TEXT NOT NULL DEFAULT '[]',
+  threshold REAL NOT NULL,
+  actions TEXT NOT NULL,
+  mode TEXT NOT NULL,                         -- report | approve | apply
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS tasks (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  query TEXT NOT NULL,
+  question TEXT NOT NULL,
+  options TEXT NOT NULL,
+  threshold REAL NOT NULL,
+  actions TEXT NOT NULL,
+  mode TEXT NOT NULL,
+  dry_run INTEGER NOT NULL,
+  status TEXT NOT NULL,                       -- running | paused | done | error
+  processed INTEGER NOT NULL DEFAULT 0,
+  total INTEGER NOT NULL DEFAULT 0,
+  passed INTEGER NOT NULL DEFAULT 0,
+  needs_approval INTEGER NOT NULL DEFAULT 0,
+  error TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS decisions (
+  id INTEGER PRIMARY KEY,
+  email_id TEXT NOT NULL REFERENCES emails(id) ON DELETE CASCADE,
+  rule_id INTEGER REFERENCES rules(id) ON DELETE SET NULL,
+  task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+  source TEXT NOT NULL,                       -- rule or task name at decision time
+  category TEXT,
+  question TEXT NOT NULL,
+  scores TEXT NOT NULL,
+  top_key TEXT NOT NULL,
+  top_score REAL NOT NULL,
+  threshold REAL NOT NULL,
+  model TEXT NOT NULL,
+  latency_ms INTEGER,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS actions (
+  id INTEGER PRIMARY KEY,
+  decision_id INTEGER NOT NULL REFERENCES decisions(id) ON DELETE CASCADE,
+  email_id TEXT NOT NULL REFERENCES emails(id) ON DELETE CASCADE,
+  ops TEXT NOT NULL,
+  -- pending | applied | suggested | reported | rejected | undone | error
+  status TEXT NOT NULL,
+  queued INTEGER NOT NULL DEFAULT 0,
+  changes TEXT,                               -- label ids actually added/removed, for undo
+  error TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_actions_status ON actions(status);
+CREATE INDEX IF NOT EXISTS ix_emails_received ON emails(received_at);
