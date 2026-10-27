@@ -51,7 +51,7 @@ export default function Rules() {
       <div className="page-head">
         <div style={{ flex: '1 1 auto' }}>
           <h1>Kurallar</h1>
-          <p>Her gelen e-posta etkin kurallardan geçer; d3 her kuralın sorusunu yanıtlar ve eşiği geçen işlem uygulanır.</p>
+          <p>Her gelen e-posta etkin kurallardan geçer; karar modeli her kuralın sorusunu yanıtlar ve eşiği geçen işlem uygulanır.</p>
         </div>
         <button type="button" className="btn-p" onClick={() => setEditing('new')}><Ic.Plus />Yeni kural</button>
       </div>

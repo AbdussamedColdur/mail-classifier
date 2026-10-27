@@ -82,7 +82,7 @@ export default function Command() {
     <div className="page">
       <div>
         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.015em' }}>Komut</h1>
-        <p style={{ margin: '2px 0 0', color: 'var(--mut)' }}>Bir Gmail aramasını seçin, d3'e her e-posta için aynı soruyu sordurun ve cevaba göre işlem yapın.</p>
+        <p style={{ margin: '2px 0 0', color: 'var(--mut)' }}>Bir Gmail aramasını seçin, karar modeline her e-posta için aynı soruyu sordurun ve cevaba göre işlem yapın.</p>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
@@ -111,7 +111,7 @@ export default function Command() {
 
           <Step n={2}>
             <label htmlFor="soru" style={{ display: 'block', fontWeight: 600, marginBottom: 2 }}>Soru</label>
-            <div style={{ fontSize: 12, color: 'var(--mut)', marginBottom: 8 }}>d3 bu soruyu e-postanın gönderen, konu ve gövdesiyle birlikte değerlendirir.</div>
+            <div style={{ fontSize: 12, color: 'var(--mut)', marginBottom: 8 }}>Model bu soruyu e-postanın gönderen, konu ve gövdesiyle birlikte değerlendirir.</div>
             <textarea id="soru" rows={2} value={question} onChange={(e) => setQuestion(e.target.value)} style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 8, background: 'var(--card)', resize: 'vertical' }} />
           </Step>
 

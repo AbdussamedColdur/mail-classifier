@@ -71,7 +71,7 @@ export default function Panel() {
       <div className="page-head">
         <div style={{ flex: '1 1 auto' }}>
           <h1>Panel</h1>
-          <p>{today()} · {ol?.model.split(':')[0] ?? 'd3'} karar modeli {status?.lastScan ? `son taramayı ${hhmm(status.lastScan)}'de yaptı` : 'henüz tarama yapmadı'}</p>
+          <p>{today()} · {ol?.model ?? 'Karar modeli'} {status?.lastScan ? `son taramayı ${hhmm(status.lastScan)}'de yaptı` : 'henüz tarama yapmadı'}</p>
         </div>
         <a className="btn ib" href={api.csvUrl('7d')} style={{ color: 'var(--tx)', textDecoration: 'none' }}>Rapor indir</a>
         <button type="button" className="btn-p" onClick={scan} disabled={busy === 'scan' || !gm?.connected}>{busy === 'scan' || status?.scanning ? 'Taranıyor…' : 'Şimdi tara'}</button>

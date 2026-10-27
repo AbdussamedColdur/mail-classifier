@@ -309,6 +309,15 @@ class SmokeTest(unittest.TestCase):
         self.assertEqual((r["applyThreshold"], r["ignoreThreshold"]), (0.9, None))
         self.assertEqual(c.patch(f"/api/rules/{acil['id']}", json={"applyThreshold": 0.1}).status_code, 422)
 
+    def test_models_come_from_tags_with_decision_models_marked(self):
+        tags = {"running": True, "version": "0.40.11", "models": ["qwen3:8b", "tev1:4b", "d3:9b"], "decision": ["tev1:4b", "d3:9b"]}
+        with mock.patch.object(classifier, "ollama_status", lambda url: tags):
+            got = [(m["name"], m["kind"], m["installed"]) for m in self.client.get("/api/models").json()]
+            self.assertEqual(got, [("d3:9b", "decision", True), ("tev1:4b", "decision", True), ("qwen3:8b", "chat", True)])
+            config.update({"model": "tev1:1b"})  # selected but not installed: still listed, flagged
+            self.assertEqual(self.client.get("/api/models").json()[0], {"name": "tev1:1b", "installed": False, "kind": "decision"})
+            self.assertEqual(self.client.post("/api/settings/test-ollama", json={}).json()["decision"], ["tev1:4b", "d3:9b"])
+
     def test_settings_validation(self):
         c = self.client
         self.assertEqual(c.put("/api/settings", json={"maxChars": 100}).status_code, 422)

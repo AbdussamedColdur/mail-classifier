@@ -19,7 +19,6 @@ router = APIRouter(prefix="/api")
 
 Mode = Literal["report", "approve", "apply"]
 Threshold = Annotated[float, Field(ge=config.THRESHOLD_RANGE[0], le=config.THRESHOLD_RANGE[1])]
-KNOWN_MODELS = ["d3:4b", "d3:9b"]
 
 
 # --- Serialisers ---------------------------------------------------------------------------
@@ -100,7 +99,7 @@ def status() -> dict[str, Any]:
             "version": ol.get("version"),
             "url": s["ollamaUrl"],
             "model": s["model"],
-            "modelInstalled": _installed(s["model"], ol["models"]),
+            "modelInstalled": classifier.installed(s["model"], ol["models"]),
             "error": ol.get("error"),
         },
         "dryRun": s["dryRun"],
@@ -110,10 +109,6 @@ def status() -> dict[str, Any]:
         "waiting": db.one("SELECT COUNT(*) AS n FROM emails WHERE processed_at IS NULL")["n"],
         "pendingCount": db.one("SELECT COUNT(*) AS n FROM actions WHERE status = 'pending'")["n"],
     }
-
-
-def _installed(model: str, models: list[str]) -> bool:
-    return model in models or (":" not in model and f"{model}:latest" in models)
 
 
 @router.post("/scan")
@@ -599,12 +594,17 @@ def settings_put(body: SettingsIn) -> dict[str, Any]:
 def settings_test(body: OllamaTestIn) -> dict[str, Any]:
     s = config.get()
     st = classifier.ollama_status(body.ollamaUrl or s["ollamaUrl"])
-    return {"ok": st["running"], "version": st.get("version"), "models": st["models"], "error": st.get("error")}
+    return {"ok": st["running"], "version": st.get("version"), "models": st["models"], "decision": st["decision"], "error": st.get("error")}
 
 
 @router.get("/models")
 def models() -> list[dict[str, Any]]:
-    st = classifier.ollama_status(config.get()["ollamaUrl"])
-    names = KNOWN_MODELS + [m for m in st["models"] if m not in KNOWN_MODELS and not m.startswith("d3:latest")]
-    return [{"name": n, "installed": _installed(n, st["models"]) or (n == "d3:4b" and "d3:latest" in st["models"]),
-             "kind": "d3" if n.startswith("d3") else "chat"} for n in names]
+    """Installed models from /api/tags, decision models (capability "decision") first. The selected
+    model is listed even when it is not installed, so the screen can say so."""
+    s = config.get()
+    st = classifier.ollama_status(s["ollamaUrl"])
+    out = sorted(({"name": n, "installed": True, "kind": "decision" if n in st["decision"] else "chat"} for n in st["models"]),
+                 key=lambda m: (m["kind"] != "decision", m["name"]))
+    if not classifier.installed(s["model"], st["models"]):
+        out.insert(0, {"name": s["model"], "installed": False, "kind": "decision"})
+    return out

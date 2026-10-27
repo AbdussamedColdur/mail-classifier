@@ -6,9 +6,15 @@ import { useApp } from '../lib/app'
 import { nf } from '../lib/format'
 
 const INTERVALS: [number, string][] = [[1, '1 dk'], [5, '5 dk'], [15, '15 dk'], [30, '30 dk'], [60, '1 saat']]
+// From the model tests on real e-mail (Ollama 0.40.11); see CLAUDE.md.
 const DESC: Record<string, string> = {
-  'd3:4b': 'Daha hızlı ve daha az bellek kullanır. Açık seçik kategoriler için yeterli.',
-  'd3:9b': 'Daha isabetli, özellikle belirsiz e-postalarda. Karar başına daha yavaş.',
+  'tev1:4b': 'Önerilen. ~2,3 sn/karar, 5,7 GB bellek; testlerde hiç çökmedi.',
+  'd3:9b': 'Doğrulukta tev1:4b ile eşit. ~2,8 sn/karar, 10 GB bellek; kısa tanıtım e-postalarında kararsız kalabiliyor.',
+  'tev1:0.8b': 'Önerilmez: testlerde “acil” sorusunu sistematik olarak yanlış tetikledi.',
+}
+const KIND_DESC = {
+  decision: 'Karar modeli; seçeneklere doğrudan olasılık verir.',
+  chat: 'Genel sohbet modeli; yedek yöntemle (JSON puan) çalışır, karar modellerinden yavaş ve daha az tutarlıdır.',
 }
 type Editable = Omit<S, 'dryRun'>
 const KEYS: (keyof Editable)[] = ['model', 'ollamaUrl', 'pollMinutes', 'maxChars', 'onlyUnread', 'stripQuotes']
@@ -52,8 +58,7 @@ export default function Settings() {
     try {
       const r = await api.testOllama(form.ollamaUrl)
       if (!r.ok) return setTest({ state: 'fail', text: 'Bağlanılamadı · ' + (r.error ?? 'yanıt yok') })
-      const d3 = r.models.filter((m) => m.startsWith('d3'))
-      setTest({ state: 'ok', text: `Bağlandı · Ollama ${r.version ?? ''} · ${d3.length ? d3.join(' ve ') + ' bulundu' : 'd3 modeli bulunamadı'}` })
+      setTest({ state: 'ok', text: `Bağlandı · Ollama ${r.version ?? ''} · ${r.decision.length ? 'karar modelleri: ' + r.decision.join(', ') : 'karar modeli bulunamadı'}` })
     } catch (e) { setTest({ state: 'fail', text: (e as Error).message }) }
   }
 
@@ -76,14 +81,15 @@ export default function Settings() {
           <h2 id="h-dry" className="h2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Genel kuru mod
             <span className="badge" style={{ background: dry ? 'var(--gyBg)' : 'var(--gnBg)', color: dry ? 'var(--gy)' : 'var(--gn)' }}>{dry ? 'Açık' : 'Kapalı — işlemler uygulanıyor'}</span>
           </h2>
-          <p style={{ margin: '4px 0 0', color: 'var(--mut)' }}>Açıkken d3 kararlarını vermeye ve kaydetmeye devam eder, ama hiçbir etiket, arşiv ya da yıldız Gmail'e yazılmaz. Onay düğmeleri “Uygula” yerine “Öner” olur. Yeni kuralları denerken açık tutun. Anahtar kaydetmeyi beklemez; tüm ekranlara hemen uygulanır.</p>
+          <p style={{ margin: '4px 0 0', color: 'var(--mut)' }}>Açıkken model kararlarını vermeye ve kaydetmeye devam eder, ama hiçbir etiket, arşiv ya da yıldız Gmail'e yazılmaz. Onay düğmeleri “Uygula” yerine “Öner” olur. Yeni kuralları denerken açık tutun. Anahtar kaydetmeyi beklemez; tüm ekranlara hemen uygulanır.</p>
         </div>
         <Switch big on={dry} label="Genel kuru mod" track="var(--gy)" onClick={toggleDry} />
       </section>
 
       <section aria-labelledby="h-model" className="card">
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}><h2 id="h-model" className="h2">Karar modeli</h2></div>
-        <Row title="Model" hint="Ollama'da yüklü d3 sürümlerinden biri. Diğer modeller yedek yöntemle (sohbet + JSON puan) çalışır.">
+        <Row title="Model" hint="Ollama'da yüklü modeller. “Karar modeli” işaretliler (d3, tev1) önerilir; diğerleri yedek yöntemle (sohbet + JSON puan) çalışır.">
+          {models.length === 0 && <span style={{ fontSize: 12, color: 'var(--mut)' }}>Ollama'ya ulaşılamadığı için model listesi alınamadı.</span>}
           <fieldset style={{ margin: 0, padding: 0, border: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 8 }}>
             <legend className="sr">Model seçimi</legend>
             {models.map((m) => {
@@ -94,10 +100,11 @@ export default function Settings() {
                   <span style={{ flex: '1 1 auto', minWidth: 0 }}>
                     <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                       <span className="mono" style={{ fontWeight: 500, fontSize: 13 }}>{m.name}</span>
-                      <span className="badge" style={{ padding: '0 6px', borderRadius: 4, background: m.installed ? 'var(--gnBg)' : 'var(--gyBg)', color: m.installed ? 'var(--gn)' : 'var(--gy)' }}>{m.installed ? 'Yüklü' : 'Yüklü değil'}</span>
+                      {m.kind === 'decision' && <span className="badge" style={{ padding: '0 6px', borderRadius: 4, background: 'var(--accSoft)', color: 'var(--accTx)' }}>Karar modeli</span>}
+                      {!m.installed && <span className="badge" style={{ padding: '0 6px', borderRadius: 4, background: 'var(--rdBg)', color: 'var(--rd)' }}>Yüklü değil</span>}
                     </span>
                     <span style={{ display: 'block', fontSize: 12, color: 'var(--mut)', marginTop: 3 }}>
-                      {DESC[m.name] ?? 'Genel sohbet modeli; d3 yoksa yedek olarak kullanılabilir.'}
+                      {DESC[m.name] ?? KIND_DESC[m.kind]}
                       {!m.installed && <> İndirmek için: <span className="mono" style={{ fontSize: 11 }}>ollama pull {m.name}</span></>}
                     </span>
                   </span>

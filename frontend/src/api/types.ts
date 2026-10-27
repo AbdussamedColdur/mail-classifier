@@ -150,4 +150,5 @@ export interface Settings {
   dryRun: boolean
 }
 
-export interface ModelInfo { name: string; installed: boolean; kind: 'd3' | 'chat' }
+/** decision: the model lists the "decision" capability in Ollama (d3, tev1) and answers /v1/systemone. */
+export interface ModelInfo { name: string; installed: boolean; kind: 'decision' | 'chat' }

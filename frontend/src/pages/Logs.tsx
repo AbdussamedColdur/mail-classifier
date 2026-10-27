@@ -60,7 +60,7 @@ export default function Logs() {
       <div className="page-head">
         <div style={{ flex: '1 1 auto' }}>
           <h1>Kayıtlar</h1>
-          <p>d3'ün verdiği her karar ve Gmail'e uygulanan her işlem. Uygulanan işlemler 30 gün boyunca geri alınabilir.</p>
+          <p>Modelin verdiği her karar ve Gmail'e uygulanan her işlem. Uygulanan işlemler 30 gün boyunca geri alınabilir.</p>
         </div>
         <a className="btn ib" href={api.csvUrl(range, st || undefined, q.trim() || undefined)} style={{ color: 'var(--tx)', textDecoration: 'none' }}><Ic.Download />CSV indir</a>
       </div>

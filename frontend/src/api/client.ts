@@ -90,6 +90,6 @@ export const api = {
   settings: () => req<Settings>('GET', '/settings'),
   saveSettings: (s: Partial<Settings>) => req<Settings>('PUT', '/settings', s),
   testOllama: (ollamaUrl: string) =>
-    req<{ ok: boolean; version: string | null; models: string[]; error: string | null }>('POST', '/settings/test-ollama', { ollamaUrl }),
+    req<{ ok: boolean; version: string | null; models: string[]; decision: string[]; error: string | null }>('POST', '/settings/test-ollama', { ollamaUrl }),
   models: () => req<ModelInfo[]>('GET', '/models'),
 }
