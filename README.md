@@ -1,6 +1,6 @@
 # MailKarar
 
-Gmail'e gelen e-postaları yerel bir karar modeline (Ollama'da `d3`) sınıflandırtan ve sonuca göre
+Gmail'e gelen e-postaları yerel bir karar modeline (Ollama'da `tev1` ya da `d3`) sınıflandırtan ve sonuca göre
 Gmail'de etiketleme, arşivleme, yıldızlama ya da okundu işaretleme yapan yerel bir uygulama.
 E-postaların içeriği hiçbir yapay zekâ servisine gitmez; Gmail'e yalnızca Google API'si üzerinden bağlanılır.
 
@@ -14,6 +14,8 @@ Arayüz `design/` klasöründeki Claude Design tasarımına göre yazıldı.
 
 İlk çalıştırmada Python ortamını ve ön yüz paketlerini kurar, ön yüzü derler ve
 <http://127.0.0.1:8000> adresini açar. Sunucu yalnızca bu bilgisayardan erişilebilir (127.0.0.1).
+`backend\.venv` çalışmıyorsa (başka bir bilgisayardan kopyalanmış, Python kaldırılmış) betik onu yeniden kurar.
+Açılışta seçili model bir kez ısıtılır; veritabanı eski bir sürümdeyse otomatik olarak yükseltilir.
 
 Geliştirme sırasında ön yüzü ayrı çalıştırmak için:
 
@@ -24,11 +26,13 @@ cd frontend; npm run dev      # http://127.0.0.1:5173, /api isteklerini 8000'e i
 
 ## Gereksinimler
 
-- Python 3.10+, Node 18+
-- **Ollama 0.40.9 veya üstü** ve bir d3 modeli: `ollama pull d3:9b` (ya da daha hafif `d3:4b`).
-  d3 başka bir model türü; sohbet etmez, verdiğiniz seçeneklere puan verir.
-  d3 yoksa Ayarlar'dan yüklü herhangi bir sohbet modeli (ör. Qwen) seçilebilir; o zaman uygulama
-  modelden JSON olarak seçenek başına olasılık ister.
+- Python 3.10+ (3.14 ile test edildi), Node 18+
+- **Ollama 0.40.11** (test edilen sürüm) ve bir karar modeli: varsayılan `ollama pull tev1:4b`,
+  alternatif `d3:9b`. Karar modelleri sohbet etmez; verdiğiniz seçeneklere olasılık verir
+  (`/v1/systemone`). Uygulama bir modelin karar modeli olduğunu adından değil, Ollama'nın
+  `/api/tags` yanıtındaki `"decision"` yeteneğinden anlar.
+  Karar modeli yoksa Ayarlar'dan yüklü herhangi bir sohbet modeli (ör. Qwen) seçilebilir; o zaman
+  uygulama modelden JSON olarak seçenek başına olasılık ister.
 
 ## Gmail bağlantısı
 
@@ -47,17 +51,35 @@ Google, "Test" durumundaki uygulamaların iznini 7 günde bir geçersiz kılar; 
 
 - Arka plandaki tarayıcı, Ayarlar'daki aralıkla Gelen Kutusu'ndaki son 2 günün e-postalarını çeker
   (varsayılan olarak yalnızca okunmamışlar).
-- Her e-posta önce bir kategoriye konur (Fatura, Müşteri, Bülten, Spam, Diğer). Kategoriye bağlı
-  kurallar bu karara göre, kategoriden bağımsız kurallar ise kendi evet/hayır sorularıyla çalışır.
-- Bir kural tetiklendiğinde:
+- Her e-posta tek bir "choice" sorusuyla sekiz kategoriden birine konur: Banka, Fatura, Alışveriş,
+  Hesap, Kişisel, Bülten, Tanıtım, Diğer. Kategori açıklamaları modelin ölçütüdür (`backend/app/config.py`).
+  Tanıtım, bankaların ve tanınmış şirketlerin kampanyalarını da kapsar; ama banka işlemi/ekstresi,
+  fatura, sipariş ve güvenlik e-postaları gönderen aynı olsa da tanıtım sayılmaz.
+- Kurallar iki türlüdür: **kategori kuralları** kategori kararına göre çalışır; **evet/hayır kuralları**
+  kendi sorusunu sorar ve bir kategoriyle sınırlanabilir.
+- Başlangıç kuralları: Banka, Alışveriş, Bülten ve Tanıtım → etiket + arşiv; Fatura ve Hesap → yalnızca
+  etiket (Hesap e-postaları hiçbir kuralla arşivlenemez); "Acil / yanıt bekliyor" (yalnızca Kişisel'de,
+  yıldız); "Oltalama şüphesi" (her zaman onaya, onaylanırsa etiket + arşiv). Gmail'in Spam klasörü hiç
+  kullanılmaz: Gmail'in filtresini eğitip aynı bankanın ekstrelerini de spam'e düşürebilir.
+- Eşikler:
+  - **Kategori kuralları** yalnızca bir uygulama eşiği kullanır; kategori olasılığı bunun altındaysa
+    e-posta Onay Kuyruğu'na düşer (kararsız e-postalar sessizce kaydedilmez).
+  - **Evet/hayır kuralları** iki eşik kullanır: "Evet" ≤ görmezden gelme eşiği → yalnızca kayıt;
+    arası → onay; ≥ uygulama eşiği → uygulanır. Varsayılanlar: görmezden gelme 0,50; uygulama eşiği
+    etiket koyanlarda 0,85, arşivleyenlerde 0,90, Tanıtım'da 0,95.
+- Mod:
   - **Sadece raporla:** karar kaydedilir, Gmail'e dokunulmaz.
   - **Onaya gönder** ya da puan eşiğin altındaysa: Onay Kuyruğu'na düşer.
   - **Doğrudan uygula** ve puan eşiği geçtiyse: işlem hemen uygulanır.
-- **Kuru mod** (varsayılan olarak açık) açıkken hiçbir işlem Gmail'e yazılmaz; kararlar "Önerildi" olarak kaydedilir.
+- **Genel kuru mod** (varsayılan olarak açık) açıkken hiçbir işlem Gmail'e yazılmaz; kararlar "Önerildi"
+  olarak kaydedilir. Ayrıca her kuralın kendi **kuru** bayrağı vardır (başlangıçta hepsinde açık):
+  genel kuru mod kapalıyken de kuru kural yalnızca önerir. Böylece kurallar tek tek açılabilir.
 - Etiketler Gmail'de `MailKarar/…` altında oluşturulur; uygulamanın dokunduğu her e-posta ayrıca
   `MailKarar/İşlendi` etiketini alır.
 - Geri alma yalnızca uygulamanın gerçekten değiştirdiği etiketleri eski hâline döndürür (30 gün).
-- Ollama kapalıyken gelen e-postalar bekler; model geri gelince sırayla işlenir.
+- Ollama 5xx yanıtı verirse ya da bağlantı koparsa istek 2 sn ve 5 sn arayla iki kez yeniden denenir.
+  Yine olmazsa e-posta "bekliyor" durumunda kalır ve sonraki taramada baştan işlenir; bir e-postanın
+  soruları ya hepsi yanıtlanınca kaydedilir ya hiç, yarım kalan karar ya da çift kayıt olmaz.
 - Gmail'in 429 (çok fazla istek) yanıtında istemci bekleyip 5 kez yeniden dener.
 
 ## Yapı
@@ -65,18 +87,31 @@ Google, "Test" durumundaki uygulamaların iznini 7 günde bir geçersiz kılar; 
 ```
 backend/   FastAPI + SQLite (backend/data/mailkarar.db)
   app/gmail.py       OAuth, okuma, etiket değişiklikleri
-  app/classifier.py  d3 (/v1/systemone) ve sohbet modeli yedeği
+  app/classifier.py  karar modelleri (/v1/systemone: noul ve choice) ve sohbet modeli yedeği
   app/engine.py      tarama, kurallar, kuyruk, geri alma, komut görevleri
+  app/config.py      ayarlar, kategoriler, başlangıç kuralları, eşik varsayılanları
+  app/migrate.py     veritabanı sürüm yükseltmeleri (PRAGMA user_version)
   app/api.py         /api uç noktaları
 frontend/  React + TypeScript + Vite
 design/    Claude Design kaynak dosyaları
+tools/model-tests/   model karşılaştırma ve gerçek e-posta test betikleri (uygulamanın parçası değil)
 ```
 
 Testler (Gmail ve model taklit edilerek): `cd backend; .\.venv\Scripts\python -m unittest discover -s tests -v`
 
+## Doğrulananlar
+
+- Ollama 0.40.11 ile `tev1:4b` ve `d3:9b` gerçek isteklerle denendi; `/v1/systemone` yanıt biçimleri
+  doğrulandı ve testlerde aynen kullanılıyor:
+  - evet/hayır: `{"answers": {"<ad>": {"type": "noul", "noul": 0.99}}}`
+  - çok seçenek: `{"answers": {"<ad>": {"type": "choice", "choice": "Banka", "probabilities": {...}, "confidence": 0.83}}}`
+    (skor olarak `probabilities` kullanılır; `confidence` en yüksek olasılıkla aynı değildir)
+- Her iki model de `/api/tags`'te `"capabilities": ["decision", ...]` bildiriyor.
+
 ## Henüz doğrulanmayanlar
 
-- d3'ün `/v1/systemone` uç noktası Ollama sayfasındaki örneğe göre yazıldı; bu bilgisayardaki Ollama
-  0.23.1 olduğu için gerçek modelle denenmedi. Yanıt biçimi farklıysa hata mesajı Panel'de ve
-  e-postanın kaydında görünür (`classifier._probability`).
-- Gerçek bir Gmail hesabıyla OAuth akışı henüz denenmedi.
+- Gerçek bir Gmail hesabıyla OAuth akışı ve etiket yazma henüz denenmedi.
+- Bülten ile Tanıtım ayrımı gerçek e-postalarda henüz doğrulanmadı.
+- Yeni sekiz kategorili choice sorusunun gerçek e-postalardaki doğruluğu ölçülmedi. Doğruluk sonuçları
+  (bkz. CLAUDE.md) kural başına evet/hayır sorularıyla yapılan v2 testinden; ilk turdaki choice sorusu
+  eski kategorileri kullanıyordu.
