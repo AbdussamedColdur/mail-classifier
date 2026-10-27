@@ -8,6 +8,8 @@ export interface ToastMsg { title: string; sub?: string; action?: { label: strin
 
 interface AppCtx {
   status: Status | null
+  /** The last /api/status request failed (null status alone may just mean "not answered yet"). */
+  statusFailed: boolean
   refreshStatus: () => void
   dark: boolean
   toggleTheme: () => void

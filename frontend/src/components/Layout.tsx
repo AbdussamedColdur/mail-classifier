@@ -57,7 +57,7 @@ function Pill({ bad, label, value, okText, badText }: { bad: boolean; label: str
 }
 
 export function StatusBar() {
-  const { status, toggleTheme } = useApp()
+  const { status, statusFailed, toggleTheme } = useApp()
   const g = status?.gmail
   const o = status?.ollama
   return (
@@ -70,8 +70,10 @@ export function StatusBar() {
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 26, padding: '0 10px', borderRadius: 6, background: 'var(--gyBg)', color: 'var(--gy)', fontWeight: 500 }}><Ic.Dashed />Kuru mod</span>
           )}
         </>
-      ) : (
+      ) : statusFailed ? (
         <span className="err-text">Arka uca ulaşılamıyor — <span className="mono">backend</span> klasöründe sunucuyu başlatın.</span>
+      ) : (
+        <span role="status" style={{ color: 'var(--mut)' }}>Bağlanıyor…</span>
       )}
       <span style={{ marginLeft: 'auto', color: 'var(--mut)' }}>{status?.scanning ? 'Taranıyor…' : `Son tarama ${hhmm(status?.lastScan ?? null)}`}</span>
       <button className="ib" type="button" aria-label="Temayı değiştir" onClick={toggleTheme} style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--line)', borderRadius: 7, background: 'transparent', color: 'var(--mut)' }}><Ic.Moon /></button>

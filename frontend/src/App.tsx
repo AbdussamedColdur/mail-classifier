@@ -20,6 +20,8 @@ function initialDark(): boolean {
 export default function App() {
   const [route, setRoute] = useState(parseHash)
   const [status, setStatus] = useState<Status | null>(null)
+  // Only a failed request means the backend is unreachable; before the first answer we are still connecting.
+  const [statusFailed, setStatusFailed] = useState(false)
   const [dark, setDark] = useState(initialDark)
   const [toast, setToast] = useState<ToastMsg | null>(null)
   const toastTimer = useRef<number>()
@@ -36,7 +38,7 @@ export default function App() {
   }, [dark])
 
   const refreshStatus = usePoll(async () => {
-    try { setStatus(await api.status()) } catch { setStatus(null) }
+    try { setStatus(await api.status()); setStatusFailed(false) } catch { setStatus(null); setStatusFailed(true) }
   }, 10000)
 
   const go = useCallback((s: Screen, params?: Record<string, string>) => {
@@ -61,7 +63,7 @@ export default function App() {
   }
 
   return (
-    <Ctx.Provider value={{ status, refreshStatus, dark, toggleTheme: () => setDark((d) => !d), go, toast: showToast }}>
+    <Ctx.Provider value={{ status, statusFailed, refreshStatus, dark, toggleTheme: () => setDark((d) => !d), go, toast: showToast }}>
       <div className={dark ? 'mk dk' : 'mk'} style={{ display: 'flex', flexWrap: 'wrap', minHeight: '100vh', background: 'var(--bg)' }}>
         <Nav current={route.screen} />
         <main style={{ flex: '999 1 560px', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
