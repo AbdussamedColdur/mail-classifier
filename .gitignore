@@ -6,6 +6,7 @@ backend/data/credentials.json
 
 # Yerel veritabani (e-posta, karar ve hesap kayitlari)
 backend/data/*.db
+backend/data/*.db.bak-*
 backend/data/*.db-journal
 backend/data/*.db-wal
 backend/data/*.db-shm

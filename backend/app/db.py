@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -144,15 +145,32 @@ def tx() -> Iterator[sqlite3.Connection]:
 
 
 def init() -> None:
-    """Create a new database at SCHEMA_VERSION; an existing one is upgraded by migrate.run()."""
+    """Create a new database at SCHEMA_VERSION; an existing one is upgraded by migrate.run(),
+    after a copy of it is taken here, before anything is written."""
     with tx() as con:
-        con.execute("PRAGMA journal_mode=WAL")
         fresh = not con.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'rules'").fetchone()
+        old = con.execute("PRAGMA user_version").fetchone()[0] or 1  # 0: from before versioning, i.e. v1
+        if not fresh and old < SCHEMA_VERSION:
+            backup(con, old)
+        con.execute("PRAGMA journal_mode=WAL")
         con.executescript(SCHEMA)
         if fresh:
             con.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         elif con.execute("PRAGMA user_version").fetchone()[0] == 0:
-            con.execute("PRAGMA user_version = 1")  # databases from before versioning
+            con.execute("PRAGMA user_version = 1")
+
+
+def backup(con: sqlite3.Connection, version: int) -> Path:
+    """Copy the database to mailkarar.db.bak-v<version>-<date> next to it (SQLite's backup API, so
+    pages still in the WAL file are included)."""
+    path = DB_PATH.with_name(f"{DB_PATH.name}.bak-v{version}-{datetime.now():%Y%m%d-%H%M%S}")
+    dst = sqlite3.connect(path)
+    try:
+        con.backup(dst)
+    finally:
+        dst.close()
+    logging.getLogger("mailkarar").info("database v%d backed up to %s before upgrading", version, path.name)
+    return path
 
 
 def version() -> int:

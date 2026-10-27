@@ -76,7 +76,8 @@ Ollama 0.40.11, `/v1/systemone`. Betikler `tools/model-tests/`. Gerçek e-posta 
 
 ## Veritabanı
 
-Şema sürümü `PRAGMA user_version`. `db.SCHEMA` her zaman en son düzendir; mevcut bir veritabanı
+Şema sürümü `PRAGMA user_version`. `db.SCHEMA` her zaman en son düzendir; mevcut bir veritabanı yükseltilmeden
+önce `backend/data/mailkarar.db.bak-v<eski>-<tarih>` olarak yedeklenir (`db.backup`), sonra
 `migrate.py` ile adım adım yükseltilir. Şemayı değiştirirken: `SCHEMA`'yı güncelleyin, `SCHEMA_VERSION`'ı
 artırın, `MIGRATIONS`'a bir adım ekleyin ve `test_migration_from_v1` testini genişletin
 (`tests/schema_v1.sql` donmuş v1 şemasıdır, değiştirmeyin).

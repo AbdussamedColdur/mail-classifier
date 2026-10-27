@@ -5,6 +5,7 @@ Run from backend/: .venv\\Scripts\\python -m unittest discover -s tests -v
 from __future__ import annotations
 
 import json
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -282,6 +283,18 @@ class SmokeTest(unittest.TestCase):
             db.init()
             migrate.run()
             self.assertEqual(db.version(), db.SCHEMA_VERSION)
+
+            # The untouched v1 file was copied first; a current or fresh database is not copied.
+            backups = list(Path(self.tmp.name).glob("v1.db.bak-v1-*"))
+            self.assertEqual(len(backups), 1)
+            con = sqlite3.connect(backups[0])
+            try:
+                self.assertIn("threshold", [r[1] for r in con.execute("PRAGMA table_info(rules)")])
+                self.assertEqual(con.execute("SELECT COUNT(*) FROM rules").fetchone()[0], len(rows))
+            finally:
+                con.close()
+            db.init()
+            self.assertEqual(len(list(Path(self.tmp.name).glob("*.bak-*"))), 1)
             rules = {r["name"]: r for r in self.client.get("/api/rules").json()}
             # Untouched v1 starters are gone; the edited Fatura rule stays and no second Fatura rule is added.
             self.assertFalse({"Müşteri talepleri", "Bültenleri arşivle", "Spam temizliği", "Acil iş e-postaları", "Ödenmemiş faturalar"} & set(rules))
