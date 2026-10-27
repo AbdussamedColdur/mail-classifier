@@ -221,12 +221,17 @@ function RuleEditor({ rule, categories, onClose, onSaved }: { rule: Rule | null;
       </div>
       {category && (
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, fontSize: 12 }}>
-          <Seg inset label="Kural türü" value={effKind} onChange={(k) => { if (!rule) setKind(k) }}
+          <Seg inset label="Kural türü" value={effKind} onChange={setKind} disabled={!!rule}
             items={[{ key: 'category', label: 'Kategori kararına göre' }, { key: 'question', label: 'Bu kategoride evet/hayır sor' }]} />
           <span style={{ color: 'var(--mut)' }}>{effKind === 'category'
             ? `E-posta ${category} olarak sınıflandırılınca işlem yapılır.`
             : `Yalnızca ${category} e-postalarında aşağıdaki soru sorulur.`}</span>
         </div>
+      )}
+      {rule && (
+        <span style={{ marginTop: -6, fontSize: 12, color: 'var(--mut)' }}>
+          Kapsam ve kural türü kaydedildikten sonra değiştirilemez; farklısı için yeni bir kural oluşturun.
+        </span>
       )}
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>
         {effKind === 'category' ? 'Açıklama (kategori kararında kullanılmaz, listede görünür)' : 'Soru (karar modeli evet/hayır olarak yanıtlar)'}

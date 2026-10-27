@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { useApp, type Screen } from '../lib/app'
 import { hhmm } from '../lib/format'
 import * as Ic from './Icons'
@@ -103,11 +103,11 @@ export function Switch({ on, onClick, label, track = 'var(--btn)', big = false }
   )
 }
 
-export function Seg<T extends string>({ items, value, onChange, label, inset }: { items: { key: T; label: ReactNode }[]; value: T; onChange: (v: T) => void; label: string; inset?: boolean }) {
+export function Seg<T extends string>({ items, value, onChange, label, inset, disabled }: { items: { key: T; label: ReactNode }[]; value: T; onChange: (v: T) => void; label: string; inset?: boolean; disabled?: boolean }) {
   return (
     <div role="group" aria-label={label} className={inset ? 'seg inset' : 'seg'}>
       {items.map((it) => (
-        <button key={it.key} type="button" aria-pressed={value === it.key} onClick={() => onChange(it.key)}>{it.label}</button>
+        <button key={it.key} type="button" disabled={disabled} aria-pressed={value === it.key} onClick={() => onChange(it.key)}>{it.label}</button>
       ))}
     </div>
   )
@@ -124,8 +124,18 @@ const r2 = (v: number) => Math.round(v * 100) / 100
 export function ThresholdSlider({ apply, ignore, onChange, id }: { apply: number; ignore: number | null; onChange: (apply: number, ignore: number | null) => void; id?: string }) {
   const at = (v: number) => ((v - TH_MIN) / (TH_MAX - TH_MIN)) * 100 + '%'
   const low = ignore ?? TH_MIN
+  // The two inputs are stacked, so the upper one would take every click where the thumbs overlap.
+  // Raise whichever thumb is nearer the pointer before it presses (14px thumb, see .th in styles.css).
+  const box = useRef<HTMLDivElement>(null)
+  const [front, setFront] = useState<'ignore' | 'apply'>('apply')
+  const pick = (e: PointerEvent<HTMLDivElement>) => {
+    if (ignore === null || !box.current) return
+    const { left, width } = box.current.getBoundingClientRect()
+    const v = TH_MIN + ((e.clientX - left - 7) / (width - 14)) * (TH_MAX - TH_MIN)
+    setFront(Math.abs(v - ignore) < Math.abs(v - apply) ? 'ignore' : 'apply')
+  }
   return (
-    <div className="th">
+    <div className="th" ref={box} onPointerMove={pick} onPointerDown={pick}>
       <div className="th-track" aria-hidden="true">
         {ignore !== null && <div style={{ left: 0, width: at(ignore), background: 'var(--line2)' }} />}
         <div style={{ left: at(low), right: `calc(100% - ${at(apply)})`, background: 'var(--am)' }} />
@@ -133,9 +143,11 @@ export function ThresholdSlider({ apply, ignore, onChange, id }: { apply: number
       </div>
       {ignore !== null && (
         <input type="range" className="th-ignore" aria-label="Görmezden gelme eşiği" min={TH_MIN} max={TH_MAX} step={0.01} value={ignore}
+          style={{ zIndex: front === 'ignore' ? 2 : 1 }}
           onChange={(e) => onChange(apply, Math.min(r2(Number(e.target.value)), r2(apply - 0.01)))} />
       )}
       <input id={id} type="range" aria-label="Uygulama eşiği" min={TH_MIN} max={TH_MAX} step={0.01} value={apply}
+        style={{ zIndex: front === 'apply' ? 2 : 1 }}
         onChange={(e) => onChange(Math.max(r2(Number(e.target.value)), ignore === null ? TH_MIN : r2(ignore + 0.01)), ignore)} />
     </div>
   )
