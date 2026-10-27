@@ -71,7 +71,7 @@ export const api = {
   preview: (query: string) => req<Preview>('POST', '/tasks/preview', { query }),
   createTask: (t: TaskInput) => req<{ id: number }>('POST', '/tasks', t),
   tasks: () => req<Task[]>('GET', '/tasks'),
-  taskScores: (id: number) => req<{ target: string; scores: number[] }>('GET', `/tasks/${id}/scores`),
+  taskScores: (id: number) => req<{ target: string; scores: number[]; isTop: boolean[] }>('GET', `/tasks/${id}/scores`),
   pauseTask: (id: number) => req('POST', `/tasks/${id}/pause`),
   resumeTask: (id: number) => req('POST', `/tasks/${id}/resume`),
 

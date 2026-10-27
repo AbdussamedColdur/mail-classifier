@@ -42,11 +42,11 @@ def _v2_to_v3(con: sqlite3.Connection) -> None:
         con.execute(f"ALTER TABLE {table} RENAME COLUMN threshold TO apply_threshold")
     con.execute("ALTER TABLE rules ADD COLUMN ignore_threshold REAL")
     con.execute("ALTER TABLE rules ADD COLUMN dry_run INTEGER NOT NULL DEFAULT 1")
-    con.execute("ALTER TABLE tasks ADD COLUMN ignore_threshold REAL NOT NULL DEFAULT 0.5")
+    con.execute("ALTER TABLE tasks ADD COLUMN ignore_threshold REAL")
     con.execute("ALTER TABLE decisions ADD COLUMN ignore_threshold REAL")
     below = "MIN(?, ROUND(apply_threshold - 0.05, 2))"
     con.execute(f"UPDATE rules SET ignore_threshold = {below} WHERE options != '[]'", (config.DEFAULT_IGNORE,))
-    con.execute(f"UPDATE tasks SET ignore_threshold = {below}", (config.DEFAULT_IGNORE,))
+    con.execute(f"UPDATE tasks SET ignore_threshold = {below} WHERE json_array_length(options) = 2", (config.DEFAULT_IGNORE,))
 
 
 def _add_missing_starters(con: sqlite3.Connection) -> None:

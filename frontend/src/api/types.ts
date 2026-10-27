@@ -97,7 +97,7 @@ export interface Task {
   question: string
   options: Option[]
   applyThreshold: number
-  ignoreThreshold: number
+  ignoreThreshold: number | null
   actions: string[]
   mode: Mode
   dryRun: boolean
@@ -115,7 +115,7 @@ export interface TaskInput {
   question: string
   options: Option[]
   applyThreshold: number
-  ignoreThreshold: number
+  ignoreThreshold: number | null
   actions: string[]
   mode: Mode
   dryRun: boolean

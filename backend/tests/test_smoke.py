@@ -234,9 +234,35 @@ class SmokeTest(unittest.TestCase):
         with mock.patch.object(engine, "start_task", lambda tid: engine._run_task(tid, engine.threading.Event())):
             tid = self.client.post("/api/tasks", json=t).json()["id"]
         task = self.client.get("/api/tasks").json()[0]
-        self.assertEqual((task["id"], task["status"], task["processed"], task["passed"]), (tid, "done", 4, 1))
+        # Yes/no keeps both thresholds: m3 0.9 ≥ 0.8 → applied; the others 0.1 ≤ 0.5 → only recorded.
+        self.assertEqual((task["id"], task["status"], task["processed"], task["passed"], task["needsApproval"]), (tid, "done", 4, 1, 0))
+        self.assertEqual(task["ignoreThreshold"], 0.5)
         self.assertIn("L:Şikayet", self.g.labels["m3"])
         self.assertEqual(len(self.client.get(f"/api/tasks/{tid}/scores").json()["scores"]), 4)
+
+    def test_list_task_works_like_a_category_rule(self):
+        config.update({"dryRun": False})
+        # m1: A top 0.95 ≥ 0.9 → applied. m2: A top 0.60 → approval. m3: B top → only recorded.
+        # m4: A top at 0.40 → approval, though it would sit under a yes/no ignore threshold of 0.5.
+        probs = {"m1": (0.95, 0.03, 0.02), "m2": (0.60, 0.30, 0.10), "m3": (0.10, 0.80, 0.10), "m4": (0.40, 0.30, 0.30)}
+
+        def classify(settings, content, question, options):
+            mid = next(k for k, m in MAILS.items() if m["subject"] in content)
+            return classifier.Result(dict(zip([o["key"] for o in options], probs[mid])), "tev1:4b", 500)
+
+        t = {"query": "in:inbox", "question": "Hangisi?", "applyThreshold": 0.9, "ignoreThreshold": 0.5,
+             "options": [{"key": "A", "description": ""}, {"key": "B", "description": ""}, {"key": "C", "description": ""}],
+             "actions": ["label:A"], "mode": "apply", "dryRun": False}
+        with mock.patch.object(classifier, "classify", classify), \
+                mock.patch.object(engine, "start_task", lambda tid: engine._run_task(tid, engine.threading.Event())):
+            tid = self.client.post("/api/tasks", json=t).json()["id"]
+        task = self.client.get("/api/tasks").json()[0]
+        self.assertEqual((task["passed"], task["needsApproval"], task["ignoreThreshold"]), (1, 2, None))
+        acts = {r["email_id"]: r["status"] for r in db.rows(
+            "SELECT d.email_id, a.status FROM decisions d LEFT JOIN actions a ON a.decision_id = d.id WHERE d.task_id = ?", (tid,))}
+        self.assertEqual(acts, {"m1": "applied", "m2": "pending", "m3": None, "m4": "pending"})
+        scores = self.client.get(f"/api/tasks/{tid}/scores").json()
+        self.assertEqual(scores["isTop"], [True, True, False, True])
 
     def test_migration_from_v1(self):
         # A database made before versioning: v1 layout, old starter rules, two rules the user made, a task.
@@ -249,8 +275,9 @@ class SmokeTest(unittest.TestCase):
                 for n, c, q, t, a, m in rows:
                     con.execute("INSERT INTO rules(name, category, question, options, threshold, actions, mode, enabled, created_at) "
                                 "VALUES(?, ?, ?, ?, ?, ?, ?, 1, ?)", (n, c, q, db.j([] if c else config.yes_no(q)), t, db.j(a), m, db.now()))
-                con.execute("INSERT INTO tasks(name, query, question, options, threshold, actions, mode, dry_run, status, created_at) "
-                            "VALUES('t', 'in:inbox', 'Soru?', '[]', 0.52, '[]', 'report', 0, 'done', ?)", (db.now(),))
+                for opts in (config.yes_no("Soru?"), THREE):  # a yes/no task, then a list task
+                    con.execute("INSERT INTO tasks(name, query, question, options, threshold, actions, mode, dry_run, status, created_at) "
+                                "VALUES('t', 'in:inbox', 'Soru?', ?, 0.52, '[]', 'report', 0, 'done', ?)", (db.j(opts), db.now()))
 
             db.init()
             migrate.run()
@@ -270,8 +297,9 @@ class SmokeTest(unittest.TestCase):
             o = rules["Oltalama şüphesi"]
             self.assertEqual((o["modeLocked"], o["applyThreshold"], o["ignoreThreshold"], o["dryRun"]), (True, 0.90, 0.50, True))
             self.assertTrue(all(r["dryRun"] for r in rules.values()))
-            task = self.client.get("/api/tasks").json()[0]
-            self.assertEqual((task["applyThreshold"], task["ignoreThreshold"]), (0.52, 0.47))  # kept below apply
+            listed, yes_no = self.client.get("/api/tasks").json()  # newest first
+            self.assertEqual((yes_no["applyThreshold"], yes_no["ignoreThreshold"]), (0.52, 0.47))  # kept below apply
+            self.assertEqual((listed["applyThreshold"], listed["ignoreThreshold"]), (0.52, None))
             migrate.run()  # already current: nothing changes
             self.assertEqual(len(self.client.get("/api/rules").json()), len(rules))
 

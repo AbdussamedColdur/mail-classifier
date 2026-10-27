@@ -50,6 +50,8 @@ Tek kaynak `config.py` (`THRESHOLD_RANGE`, `DEFAULT_IGNORE`, `STARTER_RULES`):
   Kullanıcı kararsız e-postaları görmek istiyor, bu yüzden kategori kurallarında görmezden gelme eşiği yok.
 - Evet/hayır kuralları: "Evet" ≤ görmezden gelme (0,50) → yalnızca kayıt; arası → onay; ≥ uygulama → uygula.
 - Uygulama eşikleri: etiket 0,85, arşiv 0,90, Tanıtım 0,95. Aralık 0,20–0,99.
+- Komut görevleri aynı ayrımı izler: evet/hayır görevi iki eşikli; liste görevi kategori kuralı gibi
+  tek eşikli, yalnızca ilk seçenek modelin en yüksek seçimi olduğunda işlem yapar.
 
 Eşikler bilerek temkinli: uydurma 12 e-postalık testte "kararlı ama yanlış" karar çıkmadı, ama gerçek
 e-postalarda fatura kuralında ≥0,85 puanla 3 hata görüldü.

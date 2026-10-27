@@ -67,6 +67,8 @@ Google, "Test" durumundaki uygulamaların iznini 7 günde bir geçersiz kılar; 
   - **Evet/hayır kuralları** iki eşik kullanır: "Evet" ≤ görmezden gelme eşiği → yalnızca kayıt;
     arası → onay; ≥ uygulama eşiği → uygulanır. Varsayılanlar: görmezden gelme 0,50; uygulama eşiği
     etiket koyanlarda 0,85, arşivleyenlerde 0,90, Tanıtım'da 0,95.
+  - **Komut görevleri** de aynı ayrımı izler: evet/hayır görevi iki eşikli; liste görevi kategori kuralı
+    gibi tek eşikli ve yalnızca ilk seçenek modelin en yüksek seçimi olduğunda işlem yapar.
 - Mod:
   - **Sadece raporla:** karar kaydedilir, Gmail'e dokunulmaz.
   - **Onaya gönder** ya da puan eşiğin altındaysa: Onay Kuyruğu'na düşer.

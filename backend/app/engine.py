@@ -142,9 +142,10 @@ def _label_of(ops: list[str]) -> str | None:
 
 
 def decide(email, result: classifier.Result, question: str, target: str, apply_th: float, ignore_th: float | None,
-           ops: list[str], mode: str, *, dry: bool, rule_id=None, task_id=None, source: str, category: str | None) -> str:
-    """Record the decision, then (unless the score is at or below the ignore threshold) report it,
-    queue it or apply it. Returns the action status, or "recorded" when no action was made."""
+           ops: list[str], mode: str, *, dry: bool, rule_id=None, task_id=None, source: str, category: str | None,
+           record_only: bool = False) -> str:
+    """Record the decision, then (unless record_only or the score is at or below the ignore threshold)
+    report it, queue it or apply it. Returns the action status, or "recorded" when no action was made."""
     score = result.scores.get(target, 0.0)
     decision_id = db.execute(
         "INSERT INTO decisions(email_id, rule_id, task_id, source, category, question, scores, top_key, top_score, "
@@ -152,7 +153,7 @@ def decide(email, result: classifier.Result, question: str, target: str, apply_t
         (email["id"], rule_id, task_id, source, category, question, db.j(result.scores), target, score,
          apply_th, ignore_th, result.model, result.latency_ms, db.now()),
     )
-    if ignore_th is not None and score <= ignore_th:
+    if record_only or (ignore_th is not None and score <= ignore_th):
         return "recorded"
     if mode == "report":
         status, queued = "reported", 0
@@ -320,9 +321,13 @@ def _run_task(task_id: int, stop: threading.Event) -> None:
             content = text.for_model(email, int(settings["maxChars"]), bool(settings["stripQuotes"]))
             result = classifier.classify(settings, content, t["question"], options)
             # Every decision is kept, also the ignored ones, so the threshold preview can use the scores.
-            status = decide(email, result, t["question"], options[0]["key"], t["apply_threshold"], t["ignore_threshold"],
+            # A list task works like a category rule: it acts only when the first option is the model's
+            # top choice, and below the apply threshold that goes to approval (no ignore threshold).
+            target = options[0]["key"]
+            status = decide(email, result, t["question"], target, t["apply_threshold"], t["ignore_threshold"],
                             ops, t["mode"], dry=bool(settings["dryRun"]), task_id=task_id, source=t["name"],
-                            category=_label_of(ops) or email.get("category"))
+                            category=_label_of(ops) or email.get("category"),
+                            record_only=len(options) > 2 and result.top[0] != target)
             if status != "recorded":
                 col = "needs_approval" if status == "pending" else "passed"
                 db.execute(f"UPDATE tasks SET {col} = {col} + 1 WHERE id = ?", (task_id,))

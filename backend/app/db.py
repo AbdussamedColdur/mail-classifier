@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   question TEXT NOT NULL,
   options TEXT NOT NULL,
   apply_threshold REAL NOT NULL,
-  ignore_threshold REAL NOT NULL,
+  ignore_threshold REAL,                      -- yes/no tasks only; a list task works like a category rule
   actions TEXT NOT NULL,
   mode TEXT NOT NULL,
   dry_run INTEGER NOT NULL,

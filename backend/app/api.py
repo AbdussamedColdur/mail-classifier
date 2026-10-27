@@ -405,7 +405,7 @@ class TaskIn(BaseModel):
     question: str = Field(min_length=3, max_length=500)
     options: list[Option] = Field(min_length=2, max_length=8)
     applyThreshold: Threshold
-    ignoreThreshold: Threshold = config.DEFAULT_IGNORE  # on the first option's score
+    ignoreThreshold: Optional[Threshold] = None  # yes/no tasks, on P(first option); DEFAULT_IGNORE when left out
     actions: list[str]
     mode: Mode
     dryRun: bool = False
@@ -439,7 +439,7 @@ def create_task(body: TaskIn) -> dict[str, Any]:
         o["description"] = o["description"] or o["key"]
     name = body.question if len(body.question) <= 48 else body.question[:47] + "…"
     mode = "report" if body.dryRun else body.mode
-    ignore_th = _ignore(True, body.applyThreshold, body.ignoreThreshold)
+    ignore_th = _ignore(len(options) == 2, body.applyThreshold, body.ignoreThreshold)
     tid = db.execute(
         "INSERT INTO tasks(name, query, question, options, apply_threshold, ignore_threshold, actions, mode, dry_run, status, created_at) "
         "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 'running', ?)",
@@ -460,8 +460,10 @@ def task_scores(task_id: int) -> dict[str, Any]:
     if not t:
         raise HTTPException(404, "Görev bulunamadı.")
     target = db.unj(t["options"])[0]["key"]
-    scores = [db.unj(r["scores"], {}).get(target, 0.0) for r in db.rows("SELECT scores FROM decisions WHERE task_id = ?", (task_id,))]
-    return {"target": target, "scores": scores}
+    all_scores = [db.unj(r["scores"], {}) for r in db.rows("SELECT scores FROM decisions WHERE task_id = ?", (task_id,))]
+    # isTop: the target was the model's top choice; a list task acts only then.
+    return {"target": target, "scores": [s.get(target, 0.0) for s in all_scores],
+            "isTop": [bool(s) and max(s, key=s.get) == target for s in all_scores]}
 
 
 @router.post("/tasks/{task_id}/pause")

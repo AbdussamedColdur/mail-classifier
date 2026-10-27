@@ -30,7 +30,7 @@ export default function Command() {
   const [mode, setMode] = useState<Mode>('approve')
   const [tasks, setTasks] = useState<Task[]>([])
   const [dryTask, setDryTask] = useState<number | null>(null)
-  const [dryScores, setDryScores] = useState<number[] | null>(null)
+  const [dryScores, setDryScores] = useState<{ scores: number[]; isTop: boolean[] } | null>(null)
   const [starting, setStarting] = useState(false)
   const dry = status?.dryRun ?? true
 
@@ -39,13 +39,15 @@ export default function Command() {
     : list.filter((o) => o.key.trim())
   const ops = [act.label && act.labelName.trim() && `label:${act.labelName.trim()}`, act.star && 'star', act.archive && 'archive', act.read && 'read']
     .filter(Boolean) as string[]
+  // A list task works like a category rule: one apply threshold, no ignore threshold.
+  const ignoreTh = kind === 'list' ? null : th.ignore
 
   usePoll(async () => {
     try {
       const t = await api.tasks()
       setTasks(t)
       const d = t.find((x) => x.id === dryTask)
-      if (d && (d.status === 'running' || dryScores === null)) setDryScores((await api.taskScores(d.id)).scores)
+      if (d && (d.status === 'running' || dryScores === null)) setDryScores(await api.taskScores(d.id))
     } catch { /* shown by the status bar */ }
   }, 3000, [dryTask])
 
@@ -60,7 +62,7 @@ export default function Command() {
     if (!dryRun && !ops.length && mode !== 'report') return toast({ title: 'En az bir işlem seçin' })
     setStarting(true)
     try {
-      const { id } = await api.createTask({ query, question, options, applyThreshold: th.apply, ignoreThreshold: th.ignore, actions: ops, mode, dryRun })
+      const { id } = await api.createTask({ query, question, options, applyThreshold: th.apply, ignoreThreshold: ignoreTh, actions: ops, mode, dryRun })
       if (dryRun) { setDryTask(id); setDryScores(null) }
       toast({ title: dryRun ? 'Kuru çalıştırma başladı' : 'Görev başladı', sub: 'İlerlemeyi aşağıdaki listeden izleyebilirsiniz.' })
     } catch (e) {
@@ -69,11 +71,16 @@ export default function Command() {
     setStarting(false)
   }
 
-  // Dry-run scores split into the three threshold zones.
-  const pass = dryScores ? dryScores.filter((s) => s >= th.apply).length : null
-  const ignored = dryScores ? dryScores.filter((s) => s <= th.ignore).length : null
-  const below = dryScores && pass !== null && ignored !== null ? dryScores.length - pass - ignored : null
-  const n = dryScores?.length ?? 0
+  // Dry-run decisions split into the three zones: apply, approval, only recorded.
+  const zones = dryScores?.scores.map((s, i) => (
+    ignoreTh === null
+      ? (!dryScores.isTop[i] ? 'rec' : s >= th.apply ? 'apply' : 'approve')
+      : (s >= th.apply ? 'apply' : s <= ignoreTh ? 'rec' : 'approve')))
+  const count = (z: string) => (zones ? zones.filter((x) => x === z).length : null)
+  const pass = count('apply')
+  const below = count('approve')
+  const ignored = count('rec')
+  const n = zones?.length ?? 0
   const scope = preview?.matchCount
   const eta = scope ? Math.max(1, Math.round((scope * preview!.secondsPerEmail) / 60)) : null
   const active = tasks.filter((t) => t.status === 'running').length
@@ -139,12 +146,14 @@ export default function Command() {
           <Step n={4}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 2 }}>
               <span style={{ fontWeight: 600 }}>Eşikler</span>
-              <span className="num" style={{ marginLeft: 'auto', fontSize: 15, fontWeight: 600 }}>{thText(th.apply, th.ignore)}</span>
+              <span className="num" style={{ marginLeft: 'auto', fontSize: 15, fontWeight: 600 }}>{thText(th.apply, ignoreTh)}</span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--mut)', marginBottom: 8 }}>
-              “{options[0]?.key ?? '—'}” puanı {th.ignore.toFixed(2)} ya da altındaysa yalnızca kaydedilir, iki eşik arasındaysa Onay Kuyruğu'na düşer, {th.apply.toFixed(2)} ve üstündeyse uygulanır.
+              {ignoreTh === null
+                ? <>Model en yüksek olasılığı “{options[0]?.key ?? '—'}” seçeneğine verirse: olasılık {th.apply.toFixed(2)} altındaysa Onay Kuyruğu'na düşer, üstündeyse uygulanır. Başka bir seçeneği seçerse yalnızca kaydedilir.</>
+                : <>“{options[0]?.key ?? '—'}” puanı {ignoreTh.toFixed(2)} ya da altındaysa yalnızca kaydedilir, iki eşik arasındaysa Onay Kuyruğu'na düşer, {th.apply.toFixed(2)} ve üstündeyse uygulanır.</>}
             </div>
-            <ThresholdSlider apply={th.apply} ignore={th.ignore} onChange={(apply, ignore) => setTh({ apply, ignore: ignore ?? th.ignore })} />
+            <ThresholdSlider apply={th.apply} ignore={ignoreTh} onChange={(apply, ignore) => setTh({ apply, ignore: ignore ?? th.ignore })} />
             <div className="num" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--mut)' }}><span>{TH_MIN.toFixed(2)}</span><span>{TH_MAX.toFixed(2)}</span></div>
             <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 10, background: 'var(--bar)' }}>
               {n > 0 && pass !== null && <>
@@ -208,7 +217,7 @@ export default function Command() {
             <Dt>Kapsam</Dt><Dd>{scope !== undefined ? `${nf.format(scope)} e-posta` : 'Önizlenmedi'}</Dd>
             <Dt>Model</Dt><Dd>{status?.ollama.model ?? '—'} (yerel)</Dd>
             <Dt>Seçenekler</Dt><Dd>{options.map((o) => o.key).join(' / ')}</Dd>
-            <Dt>Eşikler</Dt><Dd>{thText(th.apply, th.ignore)}</Dd>
+            <Dt>Eşikler</Dt><Dd>{thText(th.apply, ignoreTh)}</Dd>
             <Dt>İşlem</Dt><Dd>{ops.length ? opsText(ops) : 'İşlem seçilmedi'}</Dd>
             <Dt>Mod</Dt><Dd>{MODE_LABEL[mode]}</Dd>
             <Dt>Tahmini süre</Dt><Dd>{eta ? `~${eta} dk` : '—'}</Dd>
