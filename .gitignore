@@ -1,0 +1,27 @@
+# Gmail OAuth sirlari ve oturum tokenlari - gercek e-posta erisimi icerir
+credentials.json
+client_secret*.json
+token.json
+backend/data/credentials.json
+
+# Yerel veritabani (e-posta, karar ve hesap kayitlari)
+backend/data/*.db
+backend/data/*.db-journal
+backend/data/*.db-wal
+backend/data/*.db-shm
+
+# Model testleri: gercek e-posta icerigi barindiran cikti/ornek dosyalari
+tools/model-tests/results*
+tools/model-tests/sample*.json
+tools/model-tests/run_log*.txt
+tools/model-tests/labels.local.json
+*.csv
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node / frontend
+node_modules/
+frontend/dist/
