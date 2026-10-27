@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>MailKarar — Hata ve boş durumlar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.mk{--bg:#F7F7F8;--card:#FFFFFF;--sub:#F2F2F4;--line:#E4E4E8;--line2:#D4D4DA;--tx:#18181B;--mut:#5F5F69;--acc:#2563EB;--btn:#2563EB;--accTx:#1D4ED8;--accSoft:#EEF3FE;--gn:#15803D;--gnBg:#E7F5EC;--am:#9A4D00;--amBg:#FDF2DF;--rd:#BE2323;--rdBg:#FCEBEB;--gy:#52525C;--gyBg:#EEEEF1;--bar:#E8E8EC;font-family:Inter,system-ui,sans-serif;color:var(--tx);background:var(--bg);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.mk.dk{--bg:#0C0C0E;--card:#151518;--sub:#1E1E22;--line:#28282E;--line2:#3A3A42;--tx:#EDEDEF;--mut:#A3A3AD;--acc:#3B82F6;--btn:#2563EB;--accTx:#8AB6FF;--accSoft:rgba(59,130,246,.16);--gn:#4ADE80;--gnBg:rgba(74,222,128,.12);--am:#FBBF24;--amBg:rgba(251,191,36,.12);--rd:#F87171;--rdBg:rgba(248,113,113,.13);--gy:#B4B4BD;--gyBg:rgba(161,161,170,.15);--bar:#27272D}
+.mk *{box-sizing:border-box}
+.mk button{font:inherit;color:inherit;cursor:pointer}
+.mk a{color:var(--accTx);text-decoration:none}
+.mk a:hover{text-decoration:underline}
+.mk .num{font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div class="mk {{tc}}" style="min-height: 1150px; background: var(--bg); padding: 40px 32px">
+<div style="max-width: 1360px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px">
+<div>
+<h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em">Hata ve boş durumlar</h1>
+<p style="margin: 4px 0 0; color: var(--mut); max-width: 720px">Panel'de “durum” ayarıyla da canlı görülebilir. Kırmızı yalnızca işi durduran sorunlar için; kuru mod gri, onay bekleyen işler amber.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 24px">
+
+<section aria-labelledby="s1" style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; gap: 10px"><span class="num" style="font-size: 12px; font-weight: 600; color: var(--mut)">01</span><h2 id="s1" style="margin: 0; font-size: 15px; font-weight: 600">Ollama kapalı</h2><span style="font-size: 12px; color: var(--mut)">Model sunucusuna ulaşılamıyor</span></div>
+<div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 12px">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>Gmail: <span style="color: var(--tx); font-weight: 500">ali@gmail.com</span> bağlı</span>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--rd); background: var(--rdBg); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--rd)"></span>Ollama: <span style="color: var(--tx); font-weight: 500">d3:9b</span> <span style="color: var(--rd); font-weight: 600">kapalı</span></span>
+</div>
+<div style="padding: 16px; background: var(--bg)">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px; background: var(--rdBg); border: 1px solid var(--rd); border-radius: 10px">
+<div aria-hidden="true" style="flex: none; width: 38px; height: 38px; border-radius: 9px; background: var(--card); border: 1px solid var(--line); color: var(--rd); display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"></path></svg></div>
+<div style="flex: 1 1 240px; min-width: 0"><div style="font-weight: 600; color: var(--rd)">Ollama yanıt vermiyor</div><div style="margin-top: 2px">d3:9b modeline ulaşılamıyor. Yeni gelen 5 e-posta sınıflandırılmayı bekliyor; Gmail'de hiçbir şey değişmedi.</div></div>
+<button type="button" style="height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--btn); color: #FFFFFF; font-weight: 500; display: inline-flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"></path></svg>Modeli başlat</button>
+</div>
+</div>
+</div>
+<p style="margin: 0; font-size: 12px; color: var(--mut)">Kart sayı kartlarının üstünde durur. “Modeli başlat”, Ollama'yı yerelde açmayı dener; başarılı olunca kart kendiliğinden kaybolur. Sunucu başka adresteyse Ayarlar'a bağlantı verilir.</p>
+</section>
+
+<section aria-labelledby="s2" style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; gap: 10px"><span class="num" style="font-size: 12px; font-weight: 600; color: var(--mut)">02</span><h2 id="s2" style="margin: 0; font-size: 15px; font-weight: 600">Gmail bağlantısı koptu</h2><span style="font-size: 12px; color: var(--mut)">Belirteç geçersiz ya da izin iptal edildi</span></div>
+<div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 12px">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--rd); background: var(--rdBg); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--rd)"></span>Gmail: <span style="color: var(--tx); font-weight: 500">ali@gmail.com</span> <span style="color: var(--rd); font-weight: 600">bağlantı koptu</span></span>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>Ollama: <span style="color: var(--tx); font-weight: 500">d3:9b</span> hazır</span>
+</div>
+<div style="padding: 16px; background: var(--bg)">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px; background: var(--rdBg); border: 1px solid var(--rd); border-radius: 10px">
+<div aria-hidden="true" style="flex: none; width: 38px; height: 38px; border-radius: 9px; background: var(--card); border: 1px solid var(--line); color: var(--rd); display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7a5 5 0 0 1 0-10h2M15 7h2a5 5 0 0 1 4 8"></path><path d="M8 12h4M3 3l18 18"></path></svg></div>
+<div style="flex: 1 1 240px; min-width: 0"><div style="font-weight: 600; color: var(--rd)">Gmail bağlantısı koptu</div><div style="margin-top: 2px">ali@gmail.com için erişim izni geçersiz. Etiketleme ve arşivleme duraklatıldı; yeni kararlar kuyrukta bekliyor.</div></div>
+<button type="button" style="height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--btn); color: #FFFFFF; font-weight: 500; display: inline-flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"></path><polyline points="21 3 21 9 15 9"></polyline></svg>Yeniden bağlan</button>
+</div>
+</div>
+</div>
+<p style="margin: 0; font-size: 12px; color: var(--mut)">“Yeniden bağlan” Google onay ekranını açar; credentials.json yeniden istenmez. Hesaplar ekranında ilgili satır da kırmızı görünür.</p>
+</section>
+
+<section aria-labelledby="s3" style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; gap: 10px"><span class="num" style="font-size: 12px; font-weight: 600; color: var(--mut)">03</span><h2 id="s3" style="margin: 0; font-size: 15px; font-weight: 600">Boş onay kuyruğu</h2><span style="font-size: 12px; color: var(--mut)">Bekleyen karar yok</span></div>
+<div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line)"><span style="font-size: 14px; font-weight: 600">İşlem bekleyen e-postalar</span><span class="num" style="font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--sub); color: var(--mut)">0</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 16px; text-align: center">
+<div aria-hidden="true" style="width: 44px; height: 44px; border-radius: 50%; background: var(--gnBg); color: var(--gn); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<div style="font-weight: 600; font-size: 14px">Kuyruk boş, her şey yolunda</div>
+<div style="color: var(--mut); max-width: 360px">Bekleyen tüm kararlar işlendi. Eşiğin altında kalan yeni bir karar geldiğinde burada görünecek.</div>
+<div style="display: flex; gap: 12px; margin-top: 4px; font-size: 12px; font-weight: 500"><a href="Logs.dc.html">Son kararları gör</a><a href="Rules.dc.html">Kuralları düzenle</a></div>
+</div>
+</div>
+<p style="margin: 0; font-size: 12px; color: var(--mut)">Boş durum bir başarı durumudur: yeşil onay, kırmızı ya da gri değil. Menüdeki sayaç rozeti gizlenir.</p>
+</section>
+
+<section aria-labelledby="s4" style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; gap: 10px"><span class="num" style="font-size: 12px; font-weight: 600; color: var(--mut)">04</span><h2 id="s4" style="margin: 0; font-size: 15px; font-weight: 600">Kuru mod açık</h2><span style="font-size: 12px; color: var(--mut)">Kararlar verilir, Gmail'e yazılmaz</span></div>
+<div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden">
+<div role="status" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 28px; padding: 4px 16px; background: var(--gyBg); color: var(--gy); font-size: 12px; font-weight: 500; border-bottom: 1px solid var(--line)"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod: hiçbir işlem Gmail'e uygulanmıyor<a href="Settings.dc.html">Ayarlar</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+<div style="flex: 1 1 200px; min-width: 0"><div style="font-weight: 500">Ayşe Kaya</div><div style="color: var(--mut)">Sözleşme taslağı bugün imzalanmalı</div></div>
+<span style="font-size: 12px; font-weight: 500">Etiket: Acil + Yıldız</span>
+<button type="button" style="height: 36px; padding: 0 11px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--gn); font-size: 12px; font-weight: 600"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Öner</button>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 16px">
+<span style="font-size: 12px; color: var(--mut)">Kuru mod kapalıyken aynı düğme:</span>
+<button type="button" style="height: 36px; padding: 0 11px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--gn); font-size: 12px; font-weight: 600"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Uygula</button>
+</div>
+</div>
+<p style="margin: 0; font-size: 12px; color: var(--mut)">Bant her ekranın en üstünde, durum çubuğunun üzerinde durur. Onaylanan kararlar Kayıtlar'a “Önerildi” olarak düşer.</p>
+</section>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tc: (this.props.dark ?? false) ? 'dk' : '' };
+  }
+}
+</script>
+</body>
+</html>

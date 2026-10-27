@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>MailKarar — Komut</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.mk{--bg:#F7F7F8;--card:#FFFFFF;--sub:#F2F2F4;--line:#E4E4E8;--line2:#D4D4DA;--tx:#18181B;--mut:#5F5F69;--acc:#2563EB;--btn:#2563EB;--accTx:#1D4ED8;--accSoft:#EEF3FE;--gn:#15803D;--gnBg:#E7F5EC;--am:#9A4D00;--amBg:#FDF2DF;--rd:#BE2323;--rdBg:#FCEBEB;--gy:#52525C;--gyBg:#EEEEF1;--bar:#E8E8EC;font-family:Inter,system-ui,sans-serif;color:var(--tx);background:var(--bg);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.mk.dk{--bg:#0C0C0E;--card:#151518;--sub:#1E1E22;--line:#28282E;--line2:#3A3A42;--tx:#EDEDEF;--mut:#A3A3AD;--acc:#3B82F6;--btn:#2563EB;--accTx:#8AB6FF;--accSoft:rgba(59,130,246,.16);--gn:#4ADE80;--gnBg:rgba(74,222,128,.12);--am:#FBBF24;--amBg:rgba(251,191,36,.12);--rd:#F87171;--rdBg:rgba(248,113,113,.13);--gy:#B4B4BD;--gyBg:rgba(161,161,170,.15);--bar:#27272D}
+.mk *{box-sizing:border-box}
+.mk button,.mk input,.mk select,.mk textarea{font:inherit;color:inherit}
+.mk button{cursor:pointer}
+.mk a{color:var(--accTx);text-decoration:none}
+.mk a:hover{text-decoration:underline}
+.mk .nav:hover{background:var(--sub);text-decoration:none}
+.mk .ib:hover{background:var(--sub);border-color:var(--line2)}
+.mk .num{font-variant-numeric:tabular-nums}
+.mk .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px}
+.mk input[type=text]:focus,.mk textarea:focus{outline:2px solid var(--accSoft);border-color:var(--acc)}
+.mk input[type=range]{accent-color:var(--acc)}
+.mk input[type=checkbox],.mk input[type=radio]{accent-color:var(--acc);width:15px;height:15px;margin:0}
+</style>
+</helmet>
+<div class="mk {{tc}}" style="display: flex; flex-wrap: wrap; min-height: 1320px; background: var(--bg)">
+
+<sc-if value="{{alone}}" hint-placeholder-val="{{true}}">
+<nav aria-label="Ana menü" style="flex: 1 1 220px; background: var(--card); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 9px; padding: 4px 10px 16px">
+<div aria-hidden="true" style="width: 26px; height: 26px; border-radius: 7px; background: var(--btn); color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></div>
+<span style="font-weight: 600; font-size: 14px; letter-spacing: -0.01em">MailKarar</span>
+</div>
+<a class="nav" href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Panel</a>
+<a class="nav" href="Queue.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"></path></svg>Onay Kuyruğu<span class="num" style="margin-left: auto; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--amBg); color: var(--am)">9</span></a>
+<a class="nav" href="Command.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; background: var(--sub); color: var(--tx); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>Komut</a>
+<a class="nav" href="Rules.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg>Kurallar</a>
+<a class="nav" href="Logs.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h6"></path></svg>Kayıtlar</a>
+<a class="nav" href="Accounts.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Hesaplar</a>
+<a class="nav" href="Settings.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Ayarlar</a>
+<div style="margin-top: auto; padding: 12px 10px 4px; font-size: 12px; color: var(--mut); border-top: 1px solid var(--line)">Yerel mod — e-postalar bu cihazdan çıkmaz</div>
+</nav>
+</sc-if>
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<sc-if value="{{bandOn}}" hint-placeholder-val="{{true}}">
+<div role="status" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 28px; padding: 4px 16px; background: var(--gyBg); color: var(--gy); font-size: 12px; font-weight: 500; border-bottom: 1px solid var(--line)"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod: hiçbir işlem Gmail'e uygulanmıyor<a href="Settings.dc.html">Ayarlar</a></div>
+</sc-if>
+<sc-if value="{{alone}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 24px; border-bottom: 1px solid var(--line); background: var(--card); font-size: 12px">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>Gmail: <span style="color: var(--tx); font-weight: 500">ali@gmail.com</span> bağlı</span>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>Ollama: <span style="color: var(--tx); font-weight: 500">d3:9b</span> hazır</span>
+<sc-if value="{{dry}}" hint-placeholder-val="{{true}}"><span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 6px; background: var(--gyBg); color: var(--gy); font-weight: 500"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod</span></sc-if>
+<span style="margin-left: auto; color: var(--mut)">Son tarama 14:42</span>
+<button class="ib" type="button" aria-label="Temayı değiştir" onClick="{{toggleTheme}}" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--mut)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+</div>
+</sc-if>
+
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1360px">
+<div>
+<h1 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.015em">Komut</h1>
+<p style="margin: 2px 0 0; color: var(--mut)">Bir Gmail aramasını seçin, d3'e her e-posta için aynı soruyu sordurun ve cevaba göre işlem yapın.</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<form style="flex: 2 1 560px; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px 20px 16px">
+
+<div style="display: flex; gap: 14px">
+<div aria-hidden="true" style="flex: none; display: flex; flex-direction: column; align-items: center"><span class="num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--btn); color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</span><span style="flex: 1 1 auto; width: 1px; background: var(--line); margin: 4px 0"></span></div>
+<div style="flex: 1 1 auto; min-width: 0; padding-bottom: 22px">
+<label for="q" style="display: block; font-weight: 600; margin-bottom: 2px">Gmail arama sorgusu</label>
+<div style="font-size: 12px; color: var(--mut); margin-bottom: 8px">Gmail'in arama sözdizimi geçerli. Sorgu yalnızca okunur; hiçbir şey değişmez.</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<input id="q" type="text" class="mono" value="from:(@tedarikci.com) has:attachment newer_than:30d" style="flex: 1 1 320px; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--sub)">
+<button class="ib" type="button" style="height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-weight: 500">Önizle</button>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px">
+<span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 6px; background: var(--gnBg); color: var(--gn); font-weight: 500"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="num">64</span> e-posta eşleşti</span>
+<span style="color: var(--mut)">En eskisi 27 Eylül · 11'i daha önce işlenmiş</span>
+</div>
+</div>
+</div>
+
+<div style="display: flex; gap: 14px">
+<div aria-hidden="true" style="flex: none; display: flex; flex-direction: column; align-items: center"><span class="num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--btn); color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">2</span><span style="flex: 1 1 auto; width: 1px; background: var(--line); margin: 4px 0"></span></div>
+<div style="flex: 1 1 auto; min-width: 0; padding-bottom: 22px">
+<label for="soru" style="display: block; font-weight: 600; margin-bottom: 2px">Soru</label>
+<div style="font-size: 12px; color: var(--mut); margin-bottom: 8px">d3 bu soruyu e-postanın gönderen, konu ve gövdesiyle birlikte değerlendirir.</div>
+<textarea id="soru" rows="2" style="width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); resize: vertical">Bu e-posta henüz ödenmemiş bir fatura içeriyor mu?</textarea>
+</div>
+</div>
+
+<div style="display: flex; gap: 14px">
+<div aria-hidden="true" style="flex: none; display: flex; flex-direction: column; align-items: center"><span class="num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--btn); color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">3</span><span style="flex: 1 1 auto; width: 1px; background: var(--line); margin: 4px 0"></span></div>
+<div style="flex: 1 1 auto; min-width: 0; padding-bottom: 22px">
+<div style="font-weight: 600; margin-bottom: 8px">Seçenekler</div>
+<div role="group" aria-label="Seçenek türü" style="display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: var(--sub); margin-bottom: 10px">
+<button type="button" onClick="{{setYn}}" aria-pressed="{{ynOn}}" style="height: 28px; padding: 0 12px; border: 0; border-radius: 6px; font-size: 12px; font-weight: 500; background: {{ynBg}}; color: {{ynFg}}; box-shadow: {{ynSh}}">Evet / Hayır</button>
+<button type="button" onClick="{{setList}}" aria-pressed="{{listOn}}" style="height: 28px; padding: 0 12px; border: 0; border-radius: 6px; font-size: 12px; font-weight: 500; background: {{listBg}}; color: {{listFg}}; box-shadow: {{listSh}}">Liste</button>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<sc-for list="{{opts}}" as="o" hint-placeholder-count="2">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 1px solid var(--line2); border-radius: 7px; font-weight: 500"><span class="num" style="font-size: 11px; color: var(--mut)">{{o.k}}</span>{{o.label}}</span>
+</sc-for>
+<sc-if value="{{isList}}" hint-placeholder-val="{{false}}">
+<button class="ib" type="button" style="height: 30px; padding: 0 10px; border: 1px dashed var(--line2); border-radius: 7px; background: transparent; color: var(--mut); font-weight: 500">+ Seçenek ekle</button>
+</sc-if>
+</div>
+</div>
+</div>
+
+<div style="display: flex; gap: 14px">
+<div aria-hidden="true" style="flex: none; display: flex; flex-direction: column; align-items: center"><span class="num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--btn); color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">4</span><span style="flex: 1 1 auto; width: 1px; background: var(--line); margin: 4px 0"></span></div>
+<div style="flex: 1 1 auto; min-width: 0; padding-bottom: 22px">
+<div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px">
+<label for="esik" style="font-weight: 600">Güven eşiği</label>
+<span class="num" style="margin-left: auto; font-size: 15px; font-weight: 600">{{thTxt}}</span>
+</div>
+<div style="font-size: 12px; color: var(--mut); margin-bottom: 8px">Puanı bu değerin altında kalan kararlar uygulanmaz, Onay Kuyruğu'na düşer.</div>
+<input id="esik" type="range" min="0.5" max="0.99" step="0.01" value="{{th}}" onChange="{{onTh}}" style="width: 100%">
+<div class="num" style="display: flex; justify-content: space-between; font-size: 11px; color: var(--mut)"><span>0.50</span><span>0.75</span><span>0.99</span></div>
+<div style="display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 10px; background: var(--bar)"><div style="background: var(--acc); width: {{passW}}"></div><div style="background: var(--am); width: {{belowW}}"></div></div>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 6px; font-size: 12px; color: var(--mut)">
+<span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: var(--acc)"></span>Tahmini eşiği geçen <span class="num" style="color: var(--tx); font-weight: 600">{{pass}}</span></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 2px; background: var(--am)"></span>Onaya düşecek <span class="num" style="color: var(--tx); font-weight: 600">{{below}}</span></span>
+</div>
+</div>
+</div>
+
+<div style="display: flex; gap: 14px">
+<div aria-hidden="true" style="flex: none; display: flex; flex-direction: column; align-items: center"><span class="num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--btn); color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">5</span><span style="flex: 1 1 auto; width: 1px; background: var(--line); margin: 4px 0"></span></div>
+<div style="flex: 1 1 auto; min-width: 0; padding-bottom: 22px">
+<div style="font-weight: 600; margin-bottom: 2px">İşlem</div>
+<div style="font-size: 12px; color: var(--mut); margin-bottom: 10px">Model <span style="color: var(--tx); font-weight: 500">“{{firstOpt}}”</span> derse:</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px">
+<label style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 1px solid {{a1b}}; border-radius: 8px; background: {{a1bg}}"><input type="checkbox" checked="{{act.label}}" onChange="{{tLabel}}"><span style="flex: 1 1 auto">Etiket ekle</span><span class="mono" style="padding: 1px 6px; border-radius: 4px; background: var(--sub)">Ödenmemiş</span></label>
+<label style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 1px solid {{a2b}}; border-radius: 8px; background: {{a2bg}}"><input type="checkbox" checked="{{act.star}}" onChange="{{tStar}}"><span>Yıldızla</span></label>
+<label style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 1px solid {{a3b}}; border-radius: 8px; background: {{a3bg}}"><input type="checkbox" checked="{{act.archive}}" onChange="{{tArchive}}"><span>Arşivle</span></label>
+<label style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 1px solid {{a4b}}; border-radius: 8px; background: {{a4bg}}"><input type="checkbox" checked="{{act.read}}" onChange="{{tRead}}"><span>Okundu işaretle</span></label>
+</div>
+</div>
+</div>
+
+<div style="display: flex; gap: 14px">
+<div aria-hidden="true" style="flex: none; display: flex; flex-direction: column; align-items: center"><span class="num" style="width: 24px; height: 24px; border-radius: 50%; background: var(--btn); color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">6</span></div>
+<fieldset style="flex: 1 1 auto; min-width: 0; margin: 0; padding: 0 0 18px; border: 0">
+<legend style="padding: 0; font-weight: 600; margin-bottom: 10px">Mod</legend>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="3">
+<label style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 1px solid {{m.bd}}; border-radius: 8px; background: {{m.bg}}; cursor: pointer"><input type="radio" name="mod" checked="{{m.on}}" onChange="{{m.pick}}" style="margin-top: 2px"><span><span style="display: block; font-weight: 500">{{m.label}}</span><span style="display: block; font-size: 12px; color: var(--mut); margin-top: 2px">{{m.desc}}</span></span></label>
+</sc-for>
+</div>
+</fieldset>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line)">
+<sc-if value="{{dry}}" hint-placeholder-val="{{true}}"><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mut)"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod açık: görev Gmail'e hiçbir şey yazmaz</span></sc-if>
+<button class="ib" type="button" style="margin-left: auto; height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-weight: 500">Kuru çalıştır</button>
+<button type="button" style="height: 36px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--btn); color: #FFFFFF; font-weight: 500; display: inline-flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"></path></svg>Görevi başlat</button>
+</div>
+</form>
+
+<aside aria-label="Görev özeti" style="flex: 1 1 280px; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px">
+<h2 style="margin: 0 0 12px; font-size: 14px; font-weight: 600">Görev özeti</h2>
+<dl style="margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 14px; font-size: 12px">
+<dt style="color: var(--mut)">Kapsam</dt><dd class="num" style="margin: 0; font-weight: 500">64 e-posta</dd>
+<dt style="color: var(--mut)">Model</dt><dd style="margin: 0; font-weight: 500">d3:9b (yerel)</dd>
+<dt style="color: var(--mut)">Seçenekler</dt><dd style="margin: 0; font-weight: 500">{{optSummary}}</dd>
+<dt style="color: var(--mut)">Eşik</dt><dd class="num" style="margin: 0; font-weight: 500">{{thTxt}}</dd>
+<dt style="color: var(--mut)">İşlem</dt><dd style="margin: 0; font-weight: 500">{{actSummary}}</dd>
+<dt style="color: var(--mut)">Mod</dt><dd style="margin: 0; font-weight: 500">{{modeLabel}}</dd>
+<dt style="color: var(--mut)">Tahmini süre</dt><dd class="num" style="margin: 0; font-weight: 500">~1 dk</dd>
+</dl>
+</aside>
+</div>
+
+<section style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600">Çalışan görevler</h2>
+<span class="num" style="font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--accSoft); color: var(--accTx)">2 aktif</span>
+</div>
+<sc-for list="{{tasks}}" as="t" hint-placeholder-count="4">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 12px 16px; border-top: 1px solid var(--line)">
+<div style="flex: 1 1 260px; min-width: 0">
+<div style="font-weight: 500">{{t.name}}</div>
+<div class="mono" style="color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.q}}</div>
+</div>
+<span style="flex: 0 0 130px; font-size: 12px; color: var(--mut)">{{t.mode}}</span>
+<div style="flex: 1 1 220px; min-width: 160px">
+<div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px"><span style="display: inline-flex; align-items: center; gap: 6px; color: {{t.fg}}; font-weight: 500"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{t.fg}}"></span>{{t.st}}</span><span class="num" style="color: var(--mut)">{{t.done}} / {{t.total}}</span></div>
+<div role="progressbar" aria-label="{{t.name}} ilerlemesi" aria-valuemin="0" aria-valuemax="{{t.total}}" aria-valuenow="{{t.done}}" style="height: 6px; border-radius: 3px; background: var(--bar)"><div style="height: 6px; border-radius: 3px; background: {{t.bar}}; width: {{t.w}}"></div></div>
+</div>
+<div style="flex: 0 0 auto; display: flex; gap: 6px">
+<button class="ib" type="button" style="height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); font-size: 12px; font-weight: 500">{{t.btn}}</button>
+</div>
+</div>
+</sc-for>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"kuruMod":{"editor":"boolean","default":true},"embedded":{"editor":null},"go":{"editor":null},"$preview":{"width":1440,"height":1320}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { opt: 'yn', th: 0.8, mode: 'approve', act: { label: true, star: true, archive: false, read: false } };
+  }
+  renderVals() {
+    const dark = this.state.dark ?? (this.props.dark ?? false);
+    const s = this.state;
+    const isList = s.opt === 'list';
+    const seg = (on) => ({ bg: on ? 'var(--card)' : 'transparent', fg: on ? 'var(--tx)' : 'var(--mut)', sh: on ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' });
+    const yn = seg(!isList), li = seg(isList);
+    const optList = isList ? ['Ödenmemiş', 'Ödenmiş', 'Fatura değil'] : ['Evet', 'Hayır'];
+    const th = Number(s.th);
+    const passRatio = Math.max(0.05, Math.min(1, 1.4 - th));
+    const pass = Math.round(64 * passRatio);
+    const below = 64 - pass;
+    const toggle = (k) => () => this.setState({ act: { ...s.act, [k]: !s.act[k] } });
+    const box = (on) => [on ? 'var(--acc)' : 'var(--line)', on ? 'var(--accSoft)' : 'var(--card)'];
+    const [a1b, a1bg] = box(s.act.label), [a2b, a2bg] = box(s.act.star), [a3b, a3bg] = box(s.act.archive), [a4b, a4bg] = box(s.act.read);
+    const actNames = [s.act.label && 'Etiket: Ödenmemiş', s.act.star && 'Yıldızla', s.act.archive && 'Arşivle', s.act.read && 'Okundu'].filter(Boolean);
+    const M = [
+      ['report', 'Sadece raporla', 'Kararları kaydeder, Gmail’e dokunmaz.'],
+      ['approve', 'Onaya gönder', 'Her karar kuyruğa düşer, siz onaylarsınız.'],
+      ['apply', 'Doğrudan uygula', 'Eşiği geçenler hemen uygulanır.']
+    ];
+    const modes = M.map(([id, label, desc]) => ({
+      label, desc, on: s.mode === id,
+      bd: s.mode === id ? 'var(--acc)' : 'var(--line)',
+      bg: s.mode === id ? 'var(--accSoft)' : 'var(--card)',
+      pick: () => this.setState({ mode: id })
+    }));
+    const T = [
+      { name: 'Ödenmemiş faturalar', q: 'from:(@tedarikci.com) has:attachment newer_than:30d', mode: 'Onaya gönder', done: 41, total: 64, st: 'Çalışıyor', fg: 'var(--accTx)', bar: 'var(--acc)', btn: 'Duraklat' },
+      { name: 'Eski bültenleri arşivle', q: 'category:promotions older_than:90d', mode: 'Doğrudan uygula', done: 212, total: 350, st: 'Çalışıyor', fg: 'var(--accTx)', bar: 'var(--acc)', btn: 'Duraklat' },
+      { name: 'Spam taraması', q: 'in:inbox newer_than:7d', mode: 'Doğrudan uygula', done: 77, total: 120, st: 'Hata: Gmail API 429', fg: 'var(--rd)', bar: 'var(--rd)', btn: 'Tekrar dene' },
+      { name: 'Müşteri şikayetleri', q: 'label:destek is:unread', mode: 'Sadece raporla', done: 18, total: 18, st: 'Tamamlandı', fg: 'var(--gn)', bar: 'var(--gn)', btn: 'Raporu aç' }
+    ];
+    const tasks = T.map((t) => ({ ...t, w: Math.round((t.done / t.total) * 100) + '%' }));
+    return {
+      tc: dark ? 'dk' : '',
+      alone: !this.props.embedded,
+      bandOn: !this.props.embedded && (this.props.kuruMod ?? true),
+      dry: this.props.kuruMod ?? true,
+      toggleTheme: () => this.setState({ dark: !dark }),
+      isList,
+      setYn: () => this.setState({ opt: 'yn' }),
+      setList: () => this.setState({ opt: 'list' }),
+      ynOn: isList ? 'false' : 'true', listOn: isList ? 'true' : 'false',
+      ynBg: yn.bg, ynFg: yn.fg, ynSh: yn.sh, listBg: li.bg, listFg: li.fg, listSh: li.sh,
+      opts: optList.map((label, i) => ({ label, k: String.fromCharCode(65 + i) })),
+      firstOpt: optList[0],
+      optSummary: optList.join(' / '),
+      th: th,
+      thTxt: th.toFixed(2),
+      onTh: (e) => this.setState({ th: Number(e.target.value) }),
+      pass, below,
+      passW: Math.round((pass / 64) * 100) + '%',
+      belowW: Math.round((below / 64) * 100) + '%',
+      act: s.act,
+      tLabel: toggle('label'), tStar: toggle('star'), tArchive: toggle('archive'), tRead: toggle('read'),
+      a1b, a1bg, a2b, a2bg, a3b, a3bg, a4b, a4bg,
+      actSummary: actNames.length ? actNames.join(' + ') : 'İşlem seçilmedi',
+      modes,
+      modeLabel: M.find((m) => m[0] === s.mode)[1],
+      tasks
+    };
+  }
+}
+</script>
+</body>
+</html>

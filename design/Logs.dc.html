@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>MailKarar — Kayıtlar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.mk{--bg:#F7F7F8;--card:#FFFFFF;--sub:#F2F2F4;--line:#E4E4E8;--line2:#D4D4DA;--tx:#18181B;--mut:#5F5F69;--acc:#2563EB;--btn:#2563EB;--accTx:#1D4ED8;--accSoft:#EEF3FE;--gn:#15803D;--gnBg:#E7F5EC;--am:#9A4D00;--amBg:#FDF2DF;--rd:#BE2323;--rdBg:#FCEBEB;--gy:#52525C;--gyBg:#EEEEF1;--bar:#E8E8EC;--inv:#18181B;--invTx:#FAFAFA;--invMut:#B4B4BC;--invAcc:#93BBFF;font-family:Inter,system-ui,sans-serif;color:var(--tx);background:var(--bg);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.mk.dk{--bg:#0C0C0E;--card:#151518;--sub:#1E1E22;--line:#28282E;--line2:#3A3A42;--tx:#EDEDEF;--mut:#A3A3AD;--acc:#3B82F6;--btn:#2563EB;--accTx:#8AB6FF;--accSoft:rgba(59,130,246,.16);--gn:#4ADE80;--gnBg:rgba(74,222,128,.12);--am:#FBBF24;--amBg:rgba(251,191,36,.12);--rd:#F87171;--rdBg:rgba(248,113,113,.13);--gy:#B4B4BD;--gyBg:rgba(161,161,170,.15);--bar:#27272D;--inv:#F4F4F5;--invTx:#18181B;--invMut:#55555E;--invAcc:#1D4ED8}
+.mk *{box-sizing:border-box}
+.mk button,.mk input,.mk select,.mk textarea{font:inherit;color:inherit}
+.mk button{cursor:pointer}
+.mk button:disabled{cursor:not-allowed;opacity:.45}
+.mk a{color:var(--accTx);text-decoration:none}
+.mk a:hover{text-decoration:underline}
+.mk .nav:hover{background:var(--sub);text-decoration:none}
+.mk .ib:hover{background:var(--sub);border-color:var(--line2)}
+.mk .lk{border:0;background:transparent;padding:0;color:var(--accTx);font-weight:500}
+.mk .lk:hover{text-decoration:underline}
+.mk tbody tr:hover td{background:var(--sub)}
+.mk .num{font-variant-numeric:tabular-nums}
+.mk th{font-size:11px;font-weight:500;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:8px 12px;background:var(--sub);border-bottom:1px solid var(--line);white-space:nowrap}
+.mk td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.mk input[type=checkbox]{accent-color:var(--acc);width:15px;height:15px;margin:0}
+.mk input[type=search]::placeholder{color:var(--mut)}
+</style>
+</helmet>
+<div class="mk {{tc}}" style="display: flex; flex-wrap: wrap; min-height: 1100px; background: var(--bg)">
+
+<sc-if value="{{alone}}" hint-placeholder-val="{{true}}">
+<nav aria-label="Ana menü" style="flex: 1 1 220px; background: var(--card); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 9px; padding: 4px 10px 16px">
+<div aria-hidden="true" style="width: 26px; height: 26px; border-radius: 7px; background: var(--btn); color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></div>
+<span style="font-weight: 600; font-size: 14px; letter-spacing: -0.01em">MailKarar</span>
+</div>
+<a class="nav" href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Panel</a>
+<a class="nav" href="Queue.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"></path></svg>Onay Kuyruğu<span class="num" style="margin-left: auto; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--amBg); color: var(--am)">9</span></a>
+<a class="nav" href="Command.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>Komut</a>
+<a class="nav" href="Rules.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg>Kurallar</a>
+<a class="nav" href="Logs.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; background: var(--sub); color: var(--tx); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h6"></path></svg>Kayıtlar</a>
+<a class="nav" href="Accounts.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Hesaplar</a>
+<a class="nav" href="Settings.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Ayarlar</a>
+<div style="margin-top: auto; padding: 12px 10px 4px; font-size: 12px; color: var(--mut); border-top: 1px solid var(--line)">Yerel mod — e-postalar bu cihazdan çıkmaz</div>
+</nav>
+</sc-if>
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<sc-if value="{{bandOn}}" hint-placeholder-val="{{true}}">
+<div role="status" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 28px; padding: 4px 16px; background: var(--gyBg); color: var(--gy); font-size: 12px; font-weight: 500; border-bottom: 1px solid var(--line)"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod: hiçbir işlem Gmail'e uygulanmıyor<a href="Settings.dc.html">Ayarlar</a></div>
+</sc-if>
+<sc-if value="{{alone}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 24px; border-bottom: 1px solid var(--line); background: var(--card); font-size: 12px">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>Gmail: <span style="color: var(--tx); font-weight: 500">ali@gmail.com</span> bağlı</span>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>Ollama: <span style="color: var(--tx); font-weight: 500">d3:9b</span> hazır</span>
+<sc-if value="{{dry}}" hint-placeholder-val="{{true}}"><span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 6px; background: var(--gyBg); color: var(--gy); font-weight: 500"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod</span></sc-if>
+<span style="margin-left: auto; color: var(--mut)">Son tarama 14:42</span>
+<button class="ib" type="button" aria-label="Temayı değiştir" onClick="{{toggleTheme}}" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--mut)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+</div>
+</sc-if>
+
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 1360px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px">
+<div style="flex: 1 1 auto">
+<h1 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.015em">Kayıtlar</h1>
+<p style="margin: 2px 0 0; color: var(--mut)">d3'ün verdiği her karar ve Gmail'e uygulanan her işlem. Uygulanan işlemler 30 gün boyunca geri alınabilir.</p>
+</div>
+<button class="ib" type="button" onClick="{{csv}}" style="height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-weight: 500; display: inline-flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"></path></svg>CSV indir</button>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<div role="group" aria-label="Tarih aralığı" style="display: flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: var(--card)">
+<sc-for list="{{dates}}" as="d" hint-placeholder-count="3">
+<button type="button" onClick="{{d.pick}}" aria-pressed="{{d.on}}" style="height: 28px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; font-weight: 500; background: {{d.bg}}; color: {{d.fg}}">{{d.label}}</button>
+</sc-for>
+<button type="button" style="height: 28px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; font-weight: 500; background: transparent; color: var(--mut); display: inline-flex; align-items: center; gap: 5px"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg>Özel aralık</button>
+</div>
+<div role="group" aria-label="Durum filtresi" style="display: flex; flex-wrap: wrap; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: var(--card)">
+<sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+<button type="button" onClick="{{s.pick}}" aria-pressed="{{s.on}}" style="height: 28px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; font-weight: 500; background: {{s.bg}}; color: {{s.fg}}; display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{s.dot}}"></span>{{s.label}} <span class="num" style="color: var(--mut)">{{s.n}}</span></button>
+</sc-for>
+</div>
+<label style="margin-left: auto; flex: 0 1 260px; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--mut)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Kayıtlarda ara</span><input type="search" placeholder="Konu, gönderen veya kural" style="flex: 1 1 auto; min-width: 0; border: 0; outline: none; background: transparent; color: var(--tx)"></label>
+</div>
+
+<section aria-label="Karar ve işlem kayıtları" style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden">
+<sc-if value="{{anySel}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 12px; background: var(--accSoft); border-bottom: 1px solid var(--line)">
+<span style="font-weight: 600; color: var(--accTx)"><span class="num">{{selCount}}</span> kayıt seçili</span>
+<span style="font-size: 12px; color: var(--mut)">{{selUndoTxt}}</span>
+<button type="button" onClick="{{bulkUndo}}" disabled="{{noBulk}}" style="margin-left: auto; height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: var(--btn); color: #FFFFFF; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"></path><path d="M4 9h11a5 5 0 0 1 0 10h-3"></path></svg>Seçilenleri geri al</button>
+<button class="ib" type="button" onClick="{{clearSel}}" style="height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); font-size: 12px; font-weight: 500">Seçimi temizle</button>
+</div>
+</sc-if>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 900px; border-collapse: collapse">
+<thead><tr>
+<th style="width: 36px"><input type="checkbox" aria-label="Görünen tüm kayıtları seç" checked="{{allSel}}" onChange="{{toggleAll}}"></th>
+<th>Zaman</th><th>E-posta</th><th>Kural</th><th>Puan</th><th>İşlem</th><th>Durum</th><th style="text-align: right">Eylem</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<tr>
+<td style="background: {{r.bg}}"><input type="checkbox" aria-label="{{r.cbLabel}}" checked="{{r.sel}}" onChange="{{r.tsel}}"></td>
+<td class="num" style="background: {{r.bg}}; white-space: nowrap; color: var(--mut); font-size: 12px">{{r.when}}</td>
+<td style="background: {{r.bg}}; max-width: 300px"><div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.subj}}</div><div style="font-size: 12px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.from}}</div></td>
+<td style="background: {{r.bg}}; font-size: 12px; white-space: nowrap">{{r.rule}}</td>
+<td class="num" style="background: {{r.bg}}; font-weight: 600; font-size: 12px">{{r.sc}}</td>
+<td style="background: {{r.bg}}; font-size: 12px; white-space: nowrap">{{r.act}}</td>
+<td style="background: {{r.bg}}"><span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 5px; white-space: nowrap; background: {{r.stBg}}; color: {{r.stFg}}; border: 1px solid {{r.stBd}}">{{r.st}}</span></td>
+<td style="background: {{r.bg}}; text-align: right; font-size: 12px; white-space: nowrap">
+<sc-if value="{{r.canUndo}}" hint-placeholder-val="{{true}}"><button class="lk" type="button" onClick="{{r.undoIt}}">Geri al</button></sc-if>
+<sc-if value="{{r.noUndo}}" hint-placeholder-val="{{false}}"><span style="color: var(--mut)">—</span></sc-if>
+</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+<div style="padding: 40px 16px; text-align: center; color: var(--mut)">Bu filtrelerle eşleşen kayıt yok.</div>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; color: var(--mut)">
+<span class="num">{{rowCount}} kayıt gösteriliyor</span>
+<span style="margin-left: auto">Sayfa 1 / 1</span>
+<button class="ib" type="button" disabled="{{true}}" aria-label="Önceki sayfa" style="width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 7px; background: var(--card)">‹</button>
+<button class="ib" type="button" disabled="{{true}}" aria-label="Sonraki sayfa" style="width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 7px; background: var(--card)">›</button>
+</div>
+</section>
+</div>
+</main>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+<div role="status" aria-live="polite" style="position: fixed; right: 24px; bottom: 24px; z-index: 10; display: flex; align-items: center; gap: 12px; max-width: 440px; padding: 10px 10px 10px 14px; border-radius: 10px; background: var(--inv); color: var(--invTx); box-shadow: 0 10px 30px rgba(0,0,0,0.22)">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none"><path d="M9 14 4 9l5-5"></path><path d="M4 9h11a5 5 0 0 1 0 10h-3"></path></svg>
+<div style="flex: 1 1 auto; min-width: 0"><div style="font-weight: 600">{{toast.title}}</div><div style="font-size: 12px; color: var(--invMut)">{{toast.sub}}</div></div>
+<sc-if value="{{toast.redo}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{redo}}" style="flex: none; height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--invAcc); font-size: 12px; font-weight: 600">Yinele</button></sc-if>
+<button type="button" aria-label="Bildirimi kapat" onClick="{{closeToast}}" style="flex: none; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--invMut)"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"kuruMod":{"editor":"boolean","default":true},"embedded":{"editor":null},"go":{"editor":null},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { date: '7 gün', st: 'Tümü', undone: {}, sel: {}, toast: null };
+  }
+  componentWillUnmount() { clearTimeout(this._tt); }
+  showToast(t) {
+    clearTimeout(this._tt);
+    this.setState({ toast: t });
+    this._tt = setTimeout(() => this.setState({ toast: null }), 5000);
+  }
+  renderVals() {
+    const dark = this.state.dark ?? (this.props.dark ?? false);
+    const U = this.state.undone, S = this.state.sel;
+    const L = [
+      { id: 1, day: 0, when: 'Bugün 14:32', subj: 'Sunucu bakım çalışması bu gece 23:00’te', from: 'BT Ekibi', rule: 'Acil iş e-postaları', sc: '0.94', act: 'Etiket: Acil + Yıldız', base: 'applied' },
+      { id: 2, day: 0, when: 'Bugün 14:28', subj: 'Haftalık bülten #212', from: 'Teknoloji Bülteni', rule: 'Bültenleri arşivle', sc: '0.89', act: 'Arşivle', base: 'applied' },
+      { id: 3, day: 0, when: 'Bugün 14:21', subj: 'Teklif revizyonu hakkında', from: 'Selin Yıldız', rule: 'Müşteri talepleri', sc: '0.82', act: 'Etiket: Müşteri + Yıldız', base: 'applied' },
+      { id: 4, day: 0, when: 'Bugün 14:15', subj: 'Kasım dönemi kira faturası', from: 'Site Yönetimi', rule: 'Faturaları ayır', sc: '0.93', act: 'Etiket: Fatura + Arşivle', base: 'applied' },
+      { id: 5, day: 0, when: 'Bugün 13:58', subj: 'Proje toplantısı notları', from: 'Zeynep Arslan', rule: 'Acil iş e-postaları', sc: '0.63', act: 'Etiket: Acil', base: 'rejected' },
+      { id: 6, day: 0, when: 'Bugün 13:20', subj: 'Kampanya duyurusu: sonbahar indirimi', from: 'Mağaza Bülteni', rule: 'Bültenleri arşivle', sc: '0.77', act: 'Arşivle', base: 'undone' },
+      { id: 7, day: 0, when: 'Bugün 11:47', subj: 'Fatura itirazı: Eylül dönemi', from: 'Can Öztürk', rule: 'Faturaları ayır', sc: '0.81', act: 'Etiket: Fatura + Arşivle', base: 'undone' },
+      { id: 8, day: 1, when: 'Dün 18:05', subj: 'Gönderiniz teslim edildi', from: 'Kargo Takip', rule: 'Bültenleri arşivle', sc: '0.79', act: 'Arşivle', base: 'applied' },
+      { id: 9, day: 1, when: 'Dün 16:40', subj: 'Tebrikler! Hediye çekiniz sizi bekliyor', from: 'kampanya@firsat-x.biz', rule: 'Spam temizliği', sc: '0.96', act: 'Etiket: Spam + Arşivle', base: 'applied' },
+      { id: 10, day: 1, when: 'Dün 10:12', subj: 'Toplantı daveti: 4. çeyrek planlama', from: 'Ayşe Kaya', rule: 'Acil iş e-postaları', sc: '0.71', act: 'Etiket: Acil + Yıldız', base: 'rejected' },
+      { id: 11, day: 4, when: '22 Eki 09:12', subj: 'Sipariş #4790 iade talebi', from: 'Mehmet Demir', rule: 'Müşteri talepleri', sc: '0.88', act: 'Etiket: Müşteri + Yıldız', base: 'applied' },
+      { id: 12, day: 11, when: '15 Eki 15:30', subj: 'Eylül hesap ekstresi', from: 'e-Fatura Bildirim', rule: 'Faturaları ayır', sc: '0.92', act: 'Etiket: Fatura + Arşivle', base: 'applied' }
+    ];
+    const statusOf = (r) => (U[r.id] ? 'undone' : r.base);
+    const ST = {
+      applied: ['Uygulandı', 'var(--gnBg)', 'var(--gn)', 'transparent', 'var(--gn)'],
+      rejected: ['Reddedildi', 'var(--gyBg)', 'var(--gy)', 'transparent', 'var(--gy)'],
+      undone: ['Geri alındı', 'transparent', 'var(--mut)', 'var(--line2)', 'var(--line2)']
+    };
+    const maxDay = { 'Bugün': 0, '7 gün': 7, '30 gün': 30 }[this.state.date];
+    const inDate = L.filter((r) => r.day <= maxDay);
+    const stKey = { 'Tümü': null, 'Uygulandı': 'applied', 'Reddedildi': 'rejected', 'Geri alındı': 'undone' };
+    const stats = Object.keys(stKey).map((l) => ({
+      label: l,
+      n: inDate.filter((r) => !stKey[l] || statusOf(r) === stKey[l]).length,
+      dot: stKey[l] ? ST[stKey[l]][4] : 'var(--acc)',
+      on: this.state.st === l ? 'true' : 'false',
+      bg: this.state.st === l ? 'var(--sub)' : 'transparent',
+      fg: this.state.st === l ? 'var(--tx)' : 'var(--mut)',
+      pick: () => this.setState({ st: l })
+    }));
+    const dates = ['Bugün', '7 gün', '30 gün'].map((l) => ({
+      label: l,
+      on: this.state.date === l ? 'true' : 'false',
+      bg: this.state.date === l ? 'var(--sub)' : 'transparent',
+      fg: this.state.date === l ? 'var(--tx)' : 'var(--mut)',
+      pick: () => this.setState({ date: l })
+    }));
+    const undoIds = (ids) => {
+      const list = L.filter((r) => ids.includes(r.id) && statusOf(r) === 'applied');
+      if (!list.length) return;
+      const nu = { ...this.state.undone };
+      list.forEach((r) => { nu[r.id] = true; });
+      this.setState({ undone: nu, sel: {} });
+      this._last = list.map((r) => r.id);
+      this.showToast(list.length === 1
+        ? { title: '“' + list[0].subj + '” geri alındı', sub: list[0].act + ' Gmail’den kaldırıldı', redo: true }
+        : { title: list.length + ' işlem geri alındı', sub: 'Etiketler ve arşivleme Gmail’de eski haline döndü', redo: true });
+    };
+    const shown = inDate.filter((r) => !stKey[this.state.st] || statusOf(r) === stKey[this.state.st]);
+    const rows = shown.map((r) => {
+      const st = statusOf(r);
+      const s = ST[st];
+      const sel = !!S[r.id];
+      return {
+        ...r,
+        st: s[0], stBg: s[1], stFg: s[2], stBd: s[3],
+        sel,
+        bg: sel ? 'var(--accSoft)' : 'transparent',
+        cbLabel: r.subj + ' kaydını seç',
+        canUndo: st === 'applied',
+        noUndo: st !== 'applied',
+        undoIt: () => undoIds([r.id]),
+        tsel: () => this.setState({ sel: { ...this.state.sel, [r.id]: !this.state.sel[r.id] } })
+      };
+    });
+    const selIds = Object.keys(S).filter((k) => S[k]).map(Number);
+    const selUndo = L.filter((r) => selIds.includes(r.id) && statusOf(r) === 'applied').length;
+    const allSel = rows.length > 0 && rows.every((r) => r.sel);
+    const t = this.state.toast;
+    return {
+      tc: dark ? 'dk' : '',
+      alone: !this.props.embedded,
+      bandOn: !this.props.embedded && (this.props.kuruMod ?? true),
+      dry: this.props.kuruMod ?? true,
+      toggleTheme: () => this.setState({ dark: !dark }),
+      dates,
+      stats,
+      rows,
+      empty: rows.length === 0,
+      rowCount: rows.length,
+      allSel,
+      toggleAll: () => {
+        const ns = { ...this.state.sel };
+        rows.forEach((r) => { ns[r.id] = !allSel; });
+        this.setState({ sel: ns });
+      },
+      anySel: selIds.length > 0,
+      selCount: selIds.length,
+      selUndoTxt: selUndo === selIds.length ? 'Tümü geri alınabilir' : selUndo + ' tanesi geri alınabilir (yalnızca uygulananlar)',
+      noBulk: selUndo === 0,
+      bulkUndo: () => undoIds(selIds),
+      clearSel: () => this.setState({ sel: {} }),
+      csv: () => this.showToast({ title: 'kayitlar_2026-10-26.csv indirildi', sub: rows.length + ' satır · geçerli filtrelerle', redo: false }),
+      hasToast: !!t,
+      toast: t || { title: '', sub: '', redo: false },
+      redo: () => {
+        const nu = { ...this.state.undone };
+        (this._last || []).forEach((id) => { delete nu[id]; });
+        clearTimeout(this._tt);
+        this.setState({ undone: nu, toast: null });
+      },
+      closeToast: () => { clearTimeout(this._tt); this.setState({ toast: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>MailKarar — Etkileşimli prototip</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.mk{--bg:#F7F7F8;--card:#FFFFFF;--sub:#F2F2F4;--line:#E4E4E8;--line2:#D4D4DA;--tx:#18181B;--mut:#5F5F69;--acc:#2563EB;--btn:#2563EB;--accTx:#1D4ED8;--accSoft:#EEF3FE;--gn:#15803D;--gnBg:#E7F5EC;--am:#9A4D00;--amBg:#FDF2DF;--rd:#BE2323;--rdBg:#FCEBEB;--gy:#52525C;--gyBg:#EEEEF1;--bar:#E8E8EC;font-family:Inter,system-ui,sans-serif;color:var(--tx);background:var(--bg);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.mk.dk{--bg:#0C0C0E;--card:#151518;--sub:#1E1E22;--line:#28282E;--line2:#3A3A42;--tx:#EDEDEF;--mut:#A3A3AD;--acc:#3B82F6;--btn:#2563EB;--accTx:#8AB6FF;--accSoft:rgba(59,130,246,.16);--gn:#4ADE80;--gnBg:rgba(74,222,128,.12);--am:#FBBF24;--amBg:rgba(251,191,36,.12);--rd:#F87171;--rdBg:rgba(248,113,113,.13);--gy:#B4B4BD;--gyBg:rgba(161,161,170,.15);--bar:#27272D}
+.mk *{box-sizing:border-box}
+.mk button{font:inherit;color:inherit;cursor:pointer}
+.mk .nb:hover{background:var(--sub)}
+.mk .ib:hover{background:var(--sub);border-color:var(--line2)}
+.mk .lk{border:0;background:transparent;padding:0;color:var(--accTx);font-weight:500}
+.mk .lk:hover{text-decoration:underline}
+.mk .num{font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div class="mk {{tc}}" style="display: flex; flex-wrap: wrap; min-height: 1200px; background: var(--bg)">
+
+<nav aria-label="Ana menü" style="flex: 1 1 220px; background: var(--card); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 9px; padding: 4px 10px 16px">
+<div aria-hidden="true" style="width: 26px; height: 26px; border-radius: 7px; background: var(--btn); color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></div>
+<span style="font-weight: 600; font-size: 14px; letter-spacing: -0.01em">MailKarar</span>
+</div>
+<button class="nb" type="button" onClick="{{n.panel.go}}" aria-current="{{n.panel.cur}}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; border-radius: 7px; text-align: left; font-weight: 500; background: {{n.panel.bg}}; color: {{n.panel.fg}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Panel</button>
+<button class="nb" type="button" onClick="{{n.queue.go}}" aria-current="{{n.queue.cur}}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; border-radius: 7px; text-align: left; font-weight: 500; background: {{n.queue.bg}}; color: {{n.queue.fg}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"></path></svg>Onay Kuyruğu<sc-if value="{{hasQueue}}" hint-placeholder-val="{{true}}"><span class="num" style="margin-left: auto; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--amBg); color: var(--am)">9</span></sc-if></button>
+<button class="nb" type="button" onClick="{{n.command.go}}" aria-current="{{n.command.cur}}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; border-radius: 7px; text-align: left; font-weight: 500; background: {{n.command.bg}}; color: {{n.command.fg}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>Komut</button>
+<button class="nb" type="button" onClick="{{n.rules.go}}" aria-current="{{n.rules.cur}}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; border-radius: 7px; text-align: left; font-weight: 500; background: {{n.rules.bg}}; color: {{n.rules.fg}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg>Kurallar</button>
+<button class="nb" type="button" onClick="{{n.logs.go}}" aria-current="{{n.logs.cur}}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; border-radius: 7px; text-align: left; font-weight: 500; background: {{n.logs.bg}}; color: {{n.logs.fg}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h6"></path></svg>Kayıtlar</button>
+<button class="nb" type="button" onClick="{{n.accounts.go}}" aria-current="{{n.accounts.cur}}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; border-radius: 7px; text-align: left; font-weight: 500; background: {{n.accounts.bg}}; color: {{n.accounts.fg}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Hesaplar</button>
+<button class="nb" type="button" onClick="{{n.settings.go}}" aria-current="{{n.settings.cur}}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; border-radius: 7px; text-align: left; font-weight: 500; background: {{n.settings.bg}}; color: {{n.settings.fg}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Ayarlar</button>
+<div style="margin-top: auto; padding: 12px 10px 4px; font-size: 12px; color: var(--mut); border-top: 1px solid var(--line)">Yerel mod — e-postalar bu cihazdan çıkmaz</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<sc-if value="{{dry}}" hint-placeholder-val="{{true}}">
+<div role="status" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 28px; padding: 4px 16px; background: var(--gyBg); color: var(--gy); font-size: 12px; font-weight: 500; border-bottom: 1px solid var(--line)"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod: hiçbir işlem Gmail'e uygulanmıyor<button class="lk" type="button" onClick="{{n.settings.go}}">Ayarlar</button></div>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 24px; border-bottom: 1px solid var(--line); background: var(--card); font-size: 12px">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid {{gmP.bd}}; background: {{gmP.bg}}; border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{gmP.dot}}"></span>Gmail: <span style="color: var(--tx); font-weight: 500">ali@gmail.com</span> <span style="color: {{gmP.fg}}; font-weight: {{gmP.fw}}">{{gmP.txt}}</span></span>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid {{olP.bd}}; background: {{olP.bg}}; border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{olP.dot}}"></span>Ollama: <span style="color: var(--tx); font-weight: 500">d3:9b</span> <span style="color: {{olP.fg}}; font-weight: {{olP.fw}}">{{olP.txt}}</span></span>
+<sc-if value="{{dry}}" hint-placeholder-val="{{true}}"><span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 6px; background: var(--gyBg); color: var(--gy); font-weight: 500"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod</span></sc-if>
+<span style="margin-left: auto; color: var(--mut)">Son tarama 14:42</span>
+<button class="ib" type="button" aria-label="Temayı değiştir" onClick="{{toggleTheme}}" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--mut)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+</div>
+
+<div style="display: {{d.panel}}"><dc-import name="Main" embedded="{{true}}" kuru-mod="{{dry}}" dark="{{dark}}" durum="{{durum}}" go="{{go}}" on-fix="{{fix}}" hint-size="100%,1100px"></dc-import></div>
+<div style="display: {{d.queue}}"><dc-import name="Queue" embedded="{{true}}" kuru-mod="{{dry}}" dark="{{dark}}" bos-kuyruk="{{bos}}" go="{{go}}" hint-size="100%,900px"></dc-import></div>
+<div style="display: {{d.command}}"><dc-import name="Command" embedded="{{true}}" kuru-mod="{{dry}}" dark="{{dark}}" go="{{go}}" hint-size="100%,1250px"></dc-import></div>
+<div style="display: {{d.rules}}"><dc-import name="Rules" embedded="{{true}}" kuru-mod="{{dry}}" dark="{{dark}}" go="{{go}}" hint-size="100%,920px"></dc-import></div>
+<div style="display: {{d.logs}}"><dc-import name="Logs" embedded="{{true}}" kuru-mod="{{dry}}" dark="{{dark}}" go="{{go}}" hint-size="100%,1040px"></dc-import></div>
+<div style="display: {{d.accounts}}"><dc-import name="Accounts" embedded="{{true}}" kuru-mod="{{dry}}" dark="{{dark}}" go="{{go}}" hint-size="100%,900px"></dc-import></div>
+<div style="display: {{d.settings}}"><dc-import name="Settings" embedded="{{true}}" kuru-mod="{{dry}}" dark="{{dark}}" go="{{go}}" on-dry="{{setDry}}" hint-size="100%,1060px"></dc-import></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"kuruMod":{"editor":"boolean","default":true},"durum":{"editor":"enum","options":["normal","ollama-kapali","gmail-koptu","bos-kuyruk"],"default":"normal"},"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { screen: 'panel', dry: p.kuruMod ?? true, fixed: {} };
+  }
+  componentDidUpdate(prev) {
+    if (prev.kuruMod !== this.props.kuruMod && this.props.kuruMod !== undefined) this.setState({ dry: this.props.kuruMod });
+  }
+  renderVals() {
+    const dark = this.state.dark ?? (this.props.dark ?? false);
+    const durum = this.props.durum ?? 'normal';
+    const F = this.state.fixed;
+    const cur = this.state.screen;
+    const keys = ['panel', 'queue', 'command', 'rules', 'logs', 'accounts', 'settings'];
+    const go = (k) => this.setState({ screen: k === 'main' ? 'panel' : k });
+    const n = {}, d = {};
+    keys.forEach((k) => {
+      n[k] = {
+        bg: cur === k ? 'var(--sub)' : 'transparent',
+        fg: cur === k ? 'var(--tx)' : 'var(--mut)',
+        cur: cur === k ? 'page' : 'false',
+        go: () => go(k)
+      };
+      d[k] = cur === k ? 'block' : 'none';
+    });
+    const pill = (bad, okTxt, badTxt) => bad
+      ? { bd: 'var(--rd)', bg: 'var(--rdBg)', dot: 'var(--rd)', fg: 'var(--rd)', fw: 600, txt: badTxt }
+      : { bd: 'var(--line)', bg: 'transparent', dot: 'var(--gn)', fg: 'var(--mut)', fw: 400, txt: okTxt };
+    return {
+      tc: dark ? 'dk' : '',
+      dark,
+      toggleTheme: () => this.setState({ dark: !dark }),
+      dry: this.state.dry,
+      setDry: (v) => this.setState({ dry: v }),
+      durum,
+      bos: durum === 'bos-kuyruk',
+      hasQueue: durum !== 'bos-kuyruk',
+      fix: (k) => this.setState({ fixed: { ...this.state.fixed, [k]: true } }),
+      gmP: pill(durum === 'gmail-koptu' && !F.gm, 'bağlı', 'bağlantı koptu'),
+      olP: pill(durum === 'ollama-kapali' && !F.ol, 'hazır', 'kapalı'),
+      go,
+      n,
+      d
+    };
+  }
+}
+</script>
+</body>
+</html>

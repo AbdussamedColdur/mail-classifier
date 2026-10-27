@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>MailKarar — Onay Kuyruğu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.mk{--bg:#F7F7F8;--card:#FFFFFF;--sub:#F2F2F4;--line:#E4E4E8;--line2:#D4D4DA;--tx:#18181B;--mut:#5F5F69;--acc:#2563EB;--btn:#2563EB;--accTx:#1D4ED8;--accSoft:#EEF3FE;--gn:#15803D;--gnBg:#E7F5EC;--am:#9A4D00;--amBg:#FDF2DF;--rd:#BE2323;--rdBg:#FCEBEB;--gy:#52525C;--gyBg:#EEEEF1;--bar:#E8E8EC;font-family:Inter,system-ui,sans-serif;color:var(--tx);background:var(--bg);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.mk.dk{--bg:#0C0C0E;--card:#151518;--sub:#1E1E22;--line:#28282E;--line2:#3A3A42;--tx:#EDEDEF;--mut:#A3A3AD;--acc:#3B82F6;--btn:#2563EB;--accTx:#8AB6FF;--accSoft:rgba(59,130,246,.16);--gn:#4ADE80;--gnBg:rgba(74,222,128,.12);--am:#FBBF24;--amBg:rgba(251,191,36,.12);--rd:#F87171;--rdBg:rgba(248,113,113,.13);--gy:#B4B4BD;--gyBg:rgba(161,161,170,.15);--bar:#27272D}
+.mk *{box-sizing:border-box}
+.mk button,.mk input,.mk select,.mk textarea{font:inherit;color:inherit}
+.mk button{cursor:pointer}
+.mk a{color:var(--accTx);text-decoration:none}
+.mk a:hover{text-decoration:underline}
+.mk .nav:hover{background:var(--sub);text-decoration:none}
+.mk .ib:hover{background:var(--sub);border-color:var(--line2)}
+.mk .tr{cursor:pointer}
+.mk .tr:hover td{background:var(--sub)}
+.mk .num{font-variant-numeric:tabular-nums}
+.mk th{font-size:11px;font-weight:500;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:8px 12px;background:var(--sub);border-bottom:1px solid var(--line);white-space:nowrap}
+.mk td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.mk input[type=search]::placeholder{color:var(--mut)}
+</style>
+</helmet>
+<div class="mk {{tc}}" style="display: flex; flex-wrap: wrap; min-height: 960px; background: var(--bg)">
+
+<sc-if value="{{alone}}" hint-placeholder-val="{{true}}">
+<nav aria-label="Ana menü" style="flex: 1 1 220px; background: var(--card); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 9px; padding: 4px 10px 16px">
+<div aria-hidden="true" style="width: 26px; height: 26px; border-radius: 7px; background: var(--btn); color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></div>
+<span style="font-weight: 600; font-size: 14px; letter-spacing: -0.01em">MailKarar</span>
+</div>
+<a class="nav" href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Panel</a>
+<a class="nav" href="Queue.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; background: var(--sub); color: var(--tx); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"></path></svg>Onay Kuyruğu<span class="num" style="margin-left: auto; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--amBg); color: var(--am)">{{openCount}}</span></a>
+<a class="nav" href="Command.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>Komut</a>
+<a class="nav" href="Rules.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg>Kurallar</a>
+<a class="nav" href="Logs.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h6"></path></svg>Kayıtlar</a>
+<a class="nav" href="Accounts.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Hesaplar</a>
+<a class="nav" href="Settings.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Ayarlar</a>
+<div style="margin-top: auto; padding: 12px 10px 4px; font-size: 12px; color: var(--mut); border-top: 1px solid var(--line)">Yerel mod — e-postalar bu cihazdan çıkmaz</div>
+</nav>
+</sc-if>
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<sc-if value="{{bandOn}}" hint-placeholder-val="{{true}}">
+<div role="status" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 28px; padding: 4px 16px; background: var(--gyBg); color: var(--gy); font-size: 12px; font-weight: 500; border-bottom: 1px solid var(--line)"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod: hiçbir işlem Gmail'e uygulanmıyor<a href="Settings.dc.html">Ayarlar</a></div>
+</sc-if>
+<sc-if value="{{alone}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 24px; border-bottom: 1px solid var(--line); background: var(--card); font-size: 12px">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>Gmail: <span style="color: var(--tx); font-weight: 500">ali@gmail.com</span> bağlı</span>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>Ollama: <span style="color: var(--tx); font-weight: 500">d3:9b</span> hazır</span>
+<sc-if value="{{dry}}" hint-placeholder-val="{{true}}"><span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 6px; background: var(--gyBg); color: var(--gy); font-weight: 500"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod</span></sc-if>
+<span style="margin-left: auto; color: var(--mut)">Son tarama 14:42</span>
+<button class="ib" type="button" aria-label="Temayı değiştir" onClick="{{toggleTheme}}" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--mut)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+</div>
+</sc-if>
+
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 1360px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px">
+<div style="flex: 1 1 auto">
+<h1 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.015em">Onay Kuyruğu</h1>
+<p style="margin: 2px 0 0; color: var(--mut)">Eşiğin (0.80) altında kalan ya da “Onaya gönder” modundaki görevlerden gelen kararlar</p>
+</div>
+<button class="ib" type="button" style="height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-weight: 500">Seçilenleri reddet</button>
+<button type="button" style="height: 34px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--btn); color: #FFFFFF; font-weight: 500">Eşiği geçenleri onayla</button>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<label style="flex: 0 1 280px; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--mut)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Ara</span><input type="search" placeholder="Gönderen veya konu ara" style="flex: 1 1 auto; min-width: 0; border: 0; outline: none; background: transparent; color: var(--tx)"></label>
+<div role="group" aria-label="Kategori filtresi" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: var(--card)">
+<sc-for list="{{filters}}" as="fl" hint-placeholder-count="7">
+<button type="button" onClick="{{fl.pick}}" aria-pressed="{{fl.on}}" style="height: 28px; padding: 0 10px; border: 0; border-radius: 6px; font-size: 12px; font-weight: 500; background: {{fl.bg}}; color: {{fl.fg}}">{{fl.label}} <span class="num" style="color: var(--mut)">{{fl.n}}</span></button>
+</sc-for>
+</div>
+<label style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--mut)">Sırala
+<select style="height: 34px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card)"><option>En yeni</option><option>Güven (düşük → yüksek)</option><option>Güven (yüksek → düşük)</option></select></label>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<section aria-label="Bekleyen kararlar" style="flex: 1 1 600px; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden">
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 720px; border-collapse: collapse">
+<thead><tr><th>Gönderen</th><th>Konu</th><th>Kategori</th><th>Güven</th><th>Önerilen işlem</th><th>Durum</th><th style="text-align: right">Saat</th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="9">
+<tr class="tr" onClick="{{r.pick}}">
+<td style="background: {{r.bg}}; font-weight: 500; white-space: nowrap; max-width: 170px; overflow: hidden; text-overflow: ellipsis; box-shadow: {{r.edge}}">{{r.from}}</td>
+<td style="background: {{r.bg}}; max-width: 280px"><button type="button" onClick="{{r.pick}}" style="display: block; width: 100%; padding: 0; border: 0; background: transparent; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.subj}}</button></td>
+<td style="background: {{r.bg}}"><span style="font-size: 11px; font-weight: 500; padding: 1px 7px; border: 1px solid var(--line2); border-radius: 5px; white-space: nowrap">{{r.cat}}</span></td>
+<td style="background: {{r.bg}}"><div style="display: flex; align-items: center; gap: 8px"><div style="width: 56px; height: 4px; border-radius: 2px; background: var(--bar)"><div style="height: 4px; border-radius: 2px; background: var(--acc); width: {{r.w}}"></div></div><span class="num" style="font-size: 12px; font-weight: 600">{{r.sc}}</span></div></td>
+<td style="background: {{r.bg}}; font-size: 12px; white-space: nowrap">{{r.act}}</td>
+<td style="background: {{r.bg}}"><span style="font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 5px; white-space: nowrap; background: {{r.stBg}}; color: {{r.stFg}}">{{r.st}}</span></td>
+<td class="num" style="background: {{r.bg}}; text-align: right; color: var(--mut); font-size: 12px">{{r.time}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 48px 16px; text-align: center">
+<div aria-hidden="true" style="width: 44px; height: 44px; border-radius: 50%; background: var(--gnBg); color: var(--gn); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<div style="font-weight: 600; font-size: 14px">{{emptyTitle}}</div>
+<div style="color: var(--mut); max-width: 400px">{{emptySub}}</div>
+<div style="display: flex; gap: 12px; margin-top: 4px; font-size: 12px; font-weight: 500"><a href="{{L.logs.href}}" onClick="{{L.logs.go}}">Son kararları gör</a><a href="{{L.rules.href}}" onClick="{{L.rules.go}}">Kuralları düzenle</a></div>
+</div>
+</sc-if>
+</section>
+
+<sc-if value="{{hasSel}}" hint-placeholder-val="{{true}}">
+<aside aria-label="E-posta ayrıntısı" style="flex: 0 1 380px; min-width: 300px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.06)">
+<div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line)">
+<span style="font-size: 12px; font-weight: 500; color: var(--mut)">Ayrıntı</span>
+<span style="font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 5px; background: {{sel.stBg}}; color: {{sel.stFg}}">{{sel.st}}</span>
+<button class="ib" type="button" aria-label="Paneli kapat" onClick="{{close}}" style="margin-left: auto; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--mut)"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</div>
+<div style="padding: 16px; display: flex; flex-direction: column; gap: 16px">
+<div>
+<div style="font-weight: 500">{{sel.from}} <span style="color: var(--mut); font-weight: 400">&lt;{{sel.addr}}&gt;</span></div>
+<div class="num" style="font-size: 12px; color: var(--mut)">Bugün {{sel.time}} · Gelen Kutusu</div>
+<h2 style="margin: 10px 0 6px; font-size: 15px; font-weight: 600; line-height: 1.35">{{sel.subj}}</h2>
+<p style="margin: 0; color: var(--mut); padding: 10px 12px; background: var(--sub); border-radius: 8px">{{sel.snip}}</p>
+</div>
+<div>
+<div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px">
+<h3 style="margin: 0; font-size: 13px; font-weight: 600">Model kararı</h3>
+<span style="font-size: 12px; color: var(--mut)">d3:9b · 0,8 sn</span>
+</div>
+<div style="font-size: 12px; color: var(--mut); margin-bottom: 12px">Soru: “Bu e-posta hangi kategoriye ait?”</div>
+<div role="img" aria-label="{{sel.aria}}" style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{sel.scores}}" as="o" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="flex: 0 0 60px; font-size: 12px; font-weight: {{o.fw}}">{{o.label}}</span>
+<div style="position: relative; flex: 1 1 auto; height: 14px; border-radius: 4px; background: var(--sub)"><div style="height: 14px; border-radius: 4px; background: {{o.col}}; width: {{o.w}}"></div><div aria-hidden="true" style="position: absolute; left: 80%; top: -3px; bottom: -3px; width: 0; border-left: 1px dashed var(--mut)"></div></div>
+<span class="num" style="flex: 0 0 36px; text-align: right; font-size: 12px; font-weight: {{o.fw}}">{{o.sc}}</span>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: var(--mut)"><span aria-hidden="true" style="width: 10px; border-top: 1px dashed var(--mut)"></span>Eşik 0.80 · {{sel.why}}</div>
+</div>
+<div>
+<h3 style="margin: 0 0 8px; font-size: 13px; font-weight: 600">Önerilen işlem</h3>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{sel.acts}}" as="a" hint-placeholder-count="2">
+<span style="font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 6px; background: var(--accSoft); color: var(--accTx)">{{a}}</span>
+</sc-for>
+</div>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 500">Kategoriyi değiştir
+<select style="height: 34px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-weight: 400"><option>{{sel.cat}} (model önerisi)</option><option>Acil</option><option>Fatura</option><option>Müşteri</option><option>Bülten</option><option>Spam</option><option>Diğer</option></select></label>
+<div style="display: flex; gap: 8px">
+<button type="button" onClick="{{approveSel}}" style="flex: 1 1 0; height: 38px; border: 0; border-radius: 8px; background: var(--btn); color: #FFFFFF; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Onayla ve {{okVerb}}</button>
+<button class="ib" type="button" onClick="{{rejectSel}}" style="flex: 0 0 auto; height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-weight: 500; color: var(--rd)">Reddet</button>
+</div>
+</div>
+</aside>
+</sc-if>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"kuruMod":{"editor":"boolean","default":true},"embedded":{"editor":null},"go":{"editor":null},"bosKuyruk":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { filter: 'Tümü', sel: 1, decided: {} }; }
+  renderVals() {
+    const dark = this.state.dark ?? (this.props.dark ?? false);
+    const D = this.state.decided;
+    const dry = this.props.kuruMod ?? true;
+    const bos = !!this.props.bosKuyruk;
+    const data = [
+      { id: 1, from: 'Ayşe Kaya', addr: 'ayse@kaya-insaat.com.tr', subj: 'Sözleşme taslağı bugün imzalanmalı', cat: 'Acil', time: '14:41', acts: ['Etiket: Acil', 'Yıldızla'], snip: 'Merhaba Ali Bey, ekteki sözleşme taslağının bugün mesai bitimine kadar imzalanması gerekiyor. Aksi halde teslim tarihi kayacak.', s: [['Acil', 0.91], ['Müşteri', 0.05], ['Diğer', 0.03], ['Fatura', 0.01]] },
+      { id: 2, from: 'e-Fatura Bildirim', addr: 'bildirim@e-fatura.example', subj: 'Ekim 2026 dönemi faturanız oluşturuldu', cat: 'Fatura', time: '14:37', acts: ['Etiket: Fatura', 'Arşivle'], snip: 'Ekim 2026 dönemine ait faturanız oluşturulmuştur. Son ödeme tarihi 10 Kasım 2026.', s: [['Fatura', 0.88], ['Bülten', 0.07], ['Diğer', 0.03], ['Spam', 0.02]] },
+      { id: 3, from: 'Mehmet Demir', addr: 'mehmet.demir@gmail.com', subj: 'Sipariş #4821 hâlâ teslim edilmedi', cat: 'Müşteri', time: '14:22', acts: ['Etiket: Müşteri', 'Yıldızla'], snip: 'İki hafta önce verdiğim sipariş hâlâ elime ulaşmadı. Kargo numarası da çalışmıyor, dönüş bekliyorum.', s: [['Müşteri', 0.74], ['Acil', 0.19], ['Diğer', 0.05], ['Spam', 0.02]] },
+      { id: 4, from: 'Teknoloji Bülteni', addr: 'haber@teknobulten.example', subj: 'Haftanın öne çıkanları: yerel modeller', cat: 'Bülten', time: '13:56', acts: ['Arşivle'], snip: 'Bu hafta: yerel dil modellerinde yeni sürümler, dizüstünde çıkarım ipuçları ve okur soruları.', s: [['Bülten', 0.67], ['Spam', 0.21], ['Diğer', 0.12]] },
+      { id: 5, from: 'kampanya@firsat-x.biz', addr: 'kampanya@firsat-x.biz', subj: 'Tebrikler! Hediye çekiniz sizi bekliyor', cat: 'Spam', time: '13:40', acts: ['Etiket: Spam', 'Arşivle'], snip: 'Hediye çekinizi almak için 24 saat içinde bağlantıya tıklayıp bilgilerinizi doğrulayın.', s: [['Spam', 0.58], ['Bülten', 0.36], ['Diğer', 0.06]] },
+      { id: 6, from: 'Zeynep Arslan', addr: 'zeynep.arslan@gmail.com', subj: 'Toplantıyı perşembeye alabilir miyiz?', cat: 'Diğer', time: '13:12', acts: ['Etiket: Diğer'], snip: 'Çarşamba benim için zor görünüyor, perşembe öğleden sonra uygun olur mu?', s: [['Diğer', 0.52], ['Müşteri', 0.41], ['Acil', 0.07]] },
+      { id: 7, from: 'Muhasebe Ofisi', addr: 'ofis@muhasebe.example', subj: 'KDV beyannamesi için eksik belgeler', cat: 'Acil', time: '12:48', acts: ['Etiket: Acil', 'Yıldızla'], snip: 'Beyanname için iki fatura eksik görünüyor. En geç perşembe gününe kadar iletebilir misiniz?', s: [['Acil', 0.63], ['Fatura', 0.31], ['Diğer', 0.06]] },
+      { id: 8, from: 'Kargo Takip', addr: 'takip@kargo.example', subj: 'Gönderiniz dağıtıma çıktı', cat: 'Bülten', time: '12:05', acts: ['Arşivle'], snip: 'Gönderiniz bugün dağıtıma çıkmıştır. Tahmini teslim: 18:00’e kadar.', s: [['Bülten', 0.55], ['Diğer', 0.40], ['Spam', 0.05]] },
+      { id: 9, from: 'Can Öztürk', addr: 'can.ozturk@outlook.com', subj: 'Fatura itirazı: Eylül dönemi', cat: 'Müşteri', time: '11:31', acts: ['Etiket: Müşteri'], snip: 'Eylül faturasında iki kez ücretlendirildiğimi düşünüyorum, kontrol edebilir misiniz?', s: [['Müşteri', 0.61], ['Fatura', 0.37], ['Diğer', 0.02]] }
+    ];
+    const status = (id) => D[id] === 'ok' ? [dry ? 'Önerildi' : 'Uygulandı', 'var(--gnBg)', 'var(--gn)'] : D[id] === 'no' ? ['Reddedildi', 'var(--gyBg)', 'var(--gy)'] : ['Bekliyor', 'var(--amBg)', 'var(--am)'];
+    const f = this.state.filter;
+    const labels = ['Tümü', 'Acil', 'Fatura', 'Müşteri', 'Bülten', 'Spam', 'Diğer'];
+    const filters = labels.map((l) => ({
+      label: l,
+      n: bos ? 0 : (l === 'Tümü' ? data.length : data.filter((x) => x.cat === l).length),
+      on: f === l ? 'true' : 'false',
+      bg: f === l ? 'var(--sub)' : 'transparent',
+      fg: f === l ? 'var(--tx)' : 'var(--mut)',
+      pick: () => this.setState({ filter: l })
+    }));
+    const shown = (bos ? [] : data).filter((x) => f === 'Tümü' || x.cat === f);
+    const rows = shown.map((x) => {
+      const st = status(x.id);
+      const isSel = this.state.sel === x.id;
+      return {
+        ...x,
+        sc: x.s[0][1].toFixed(2),
+        w: Math.round(x.s[0][1] * 100) + '%',
+        act: x.acts.join(' + '),
+        st: st[0], stBg: st[1], stFg: st[2],
+        bg: isSel ? 'var(--accSoft)' : 'transparent',
+        edge: isSel ? 'inset 2px 0 0 var(--acc)' : 'none',
+        pick: () => this.setState({ sel: x.id })
+      };
+    });
+    const x = data.find((d) => d.id === this.state.sel);
+    let sel = null;
+    if (x) {
+      const st = status(x.id);
+      const top = x.s[0][1];
+      sel = {
+        ...x,
+        st: st[0], stBg: st[1], stFg: st[2],
+        scores: x.s.map(([label, v], i) => ({ label, sc: v.toFixed(2), w: Math.round(v * 100) + '%', col: i === 0 ? 'var(--acc)' : 'var(--line2)', fw: i === 0 ? 600 : 400 })),
+        aria: 'Seçenek puanları: ' + x.s.map(([l, v]) => l + ' ' + v.toFixed(2)).join(', '),
+        why: top >= 0.8 ? 'eşik geçildi, görev modu onay istiyor' : 'en yüksek puan eşiğin altında, onaya gönderildi'
+      };
+    }
+    const decide = (v) => { if (this.state.sel) this.setState({ decided: { ...D, [this.state.sel]: v } }); };
+    return {
+      tc: dark ? 'dk' : '',
+      alone: !this.props.embedded,
+      bandOn: !this.props.embedded && dry,
+      L: ['rules', 'logs'].reduce((o, k) => {
+        const file = { rules: 'Rules', logs: 'Logs' }[k] + '.dc.html';
+        o[k] = { href: this.props.go ? '#' : file, go: (e) => { if (this.props.go) { e.preventDefault(); this.props.go(k); } } };
+        return o;
+      }, {}),
+      dry,
+      okVerb: dry ? 'öner' : 'uygula',
+      emptyTitle: bos ? 'Kuyruk boş, her şey yolunda' : 'Bu kategoride onay bekleyen e-posta yok',
+      emptySub: bos ? 'Bekleyen tüm kararlar işlendi. Eşiğin altında kalan yeni bir karar geldiğinde burada görünecek.' : 'Başka bir kategori seçin ya da filtreyi “Tümü” yapın.',
+      toggleTheme: () => this.setState({ dark: !dark }),
+      filters,
+      rows,
+      empty: rows.length === 0,
+      hasSel: !!sel && !bos,
+      sel: sel || { scores: [], acts: [] },
+      close: () => this.setState({ sel: null }),
+      approveSel: () => decide('ok'),
+      rejectSel: () => decide('no'),
+      openCount: bos ? 0 : data.length - Object.keys(D).length
+    };
+  }
+}
+</script>
+</body>
+</html>

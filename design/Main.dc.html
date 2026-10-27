@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>MailKarar — Panel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.mk{--bg:#F7F7F8;--card:#FFFFFF;--sub:#F2F2F4;--line:#E4E4E8;--line2:#D4D4DA;--tx:#18181B;--mut:#5F5F69;--acc:#2563EB;--btn:#2563EB;--accTx:#1D4ED8;--accSoft:#EEF3FE;--gn:#15803D;--gnBg:#E7F5EC;--am:#9A4D00;--amBg:#FDF2DF;--rd:#BE2323;--rdBg:#FCEBEB;--gy:#52525C;--gyBg:#EEEEF1;--bar:#E8E8EC;font-family:Inter,system-ui,sans-serif;color:var(--tx);background:var(--bg);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.mk.dk{--bg:#0C0C0E;--card:#151518;--sub:#1E1E22;--line:#28282E;--line2:#3A3A42;--tx:#EDEDEF;--mut:#A3A3AD;--acc:#3B82F6;--btn:#2563EB;--accTx:#8AB6FF;--accSoft:rgba(59,130,246,.16);--gn:#4ADE80;--gnBg:rgba(74,222,128,.12);--am:#FBBF24;--amBg:rgba(251,191,36,.12);--rd:#F87171;--rdBg:rgba(248,113,113,.13);--gy:#B4B4BD;--gyBg:rgba(161,161,170,.15);--bar:#27272D}
+.mk *{box-sizing:border-box}
+.mk button,.mk input,.mk select,.mk textarea{font:inherit;color:inherit}
+.mk button{cursor:pointer}
+.mk a{color:var(--accTx);text-decoration:none}
+.mk a:hover{text-decoration:underline}
+.mk .nav:hover{background:var(--sub);text-decoration:none}
+.mk .ib:hover{background:var(--sub);border-color:var(--line2)}
+.mk .row:hover{background:var(--sub)}
+.mk .num{font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div class="mk {{tc}}" style="display: flex; flex-wrap: wrap; min-height: 1150px; background: var(--bg)">
+
+<sc-if value="{{alone}}" hint-placeholder-val="{{true}}">
+<nav aria-label="Ana menü" style="flex: 1 1 220px; background: var(--card); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 9px; padding: 4px 10px 16px">
+<div aria-hidden="true" style="width: 26px; height: 26px; border-radius: 7px; background: var(--btn); color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></div>
+<span style="font-weight: 600; font-size: 14px; letter-spacing: -0.01em">MailKarar</span>
+</div>
+<a class="nav" href="Main.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; background: var(--sub); color: var(--tx); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Panel</a>
+<a class="nav" href="Queue.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"></path></svg>Onay Kuyruğu<span class="num" style="margin-left: auto; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--amBg); color: var(--am)">{{pendingCount}}</span></a>
+<a class="nav" href="Command.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>Komut</a>
+<a class="nav" href="Rules.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg>Kurallar</a>
+<a class="nav" href="Logs.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h6"></path></svg>Kayıtlar</a>
+<a class="nav" href="Accounts.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Hesaplar</a>
+<a class="nav" href="Settings.dc.html" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 7px; color: var(--mut); font-weight: 500"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>Ayarlar</a>
+<div style="margin-top: auto; padding: 12px 10px 4px; font-size: 12px; color: var(--mut); border-top: 1px solid var(--line)">Yerel mod — e-postalar bu cihazdan çıkmaz</div>
+</nav>
+</sc-if>
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<sc-if value="{{bandOn}}" hint-placeholder-val="{{true}}">
+<div role="status" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 28px; padding: 4px 16px; background: var(--gyBg); color: var(--gy); font-size: 12px; font-weight: 500; border-bottom: 1px solid var(--line)"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod: hiçbir işlem Gmail'e uygulanmıyor<a href="Settings.dc.html">Ayarlar</a></div>
+</sc-if>
+<sc-if value="{{alone}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 24px; border-bottom: 1px solid var(--line); background: var(--card); font-size: 12px">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid {{gmP.bd}}; background: {{gmP.bg}}; border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{gmP.dot}}"></span>Gmail: <span style="color: var(--tx); font-weight: 500">ali@gmail.com</span> <span style="color: {{gmP.fg}}; font-weight: {{gmP.fw}}">{{gmP.txt}}</span></span>
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid {{olP.bd}}; background: {{olP.bg}}; border-radius: 6px; color: var(--mut)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{olP.dot}}"></span>Ollama: <span style="color: var(--tx); font-weight: 500">d3:9b</span> <span style="color: {{olP.fg}}; font-weight: {{olP.fw}}">{{olP.txt}}</span></span>
+<sc-if value="{{dry}}" hint-placeholder-val="{{true}}"><span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 6px; background: var(--gyBg); color: var(--gy); font-weight: 500"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></svg>Kuru mod</span></sc-if>
+<span style="margin-left: auto; color: var(--mut)">Son tarama 14:42</span>
+<button class="ib" type="button" aria-label="Temayı değiştir" onClick="{{toggleTheme}}" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--mut)"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+</div>
+</sc-if>
+
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1360px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px">
+<div style="flex: 1 1 auto">
+<h1 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.015em">Panel</h1>
+<p style="margin: 2px 0 0; color: var(--mut)">Pazartesi, 26 Ekim · d3 karar modeli son 24 saati işledi</p>
+</div>
+<button class="ib" type="button" style="height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-weight: 500">Rapor indir</button>
+<button type="button" style="height: 34px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--btn); color: #FFFFFF; font-weight: 500">Şimdi tara</button>
+</div>
+
+<sc-if value="{{olDown}}" hint-placeholder-val="{{false}}">
+<section aria-label="Model durumu" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px; background: var(--rdBg); border: 1px solid var(--rd); border-radius: 10px">
+<div aria-hidden="true" style="flex: none; width: 38px; height: 38px; border-radius: 9px; background: var(--card); border: 1px solid var(--line); color: var(--rd); display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"></path></svg></div>
+<div style="flex: 1 1 320px; min-width: 0">
+<div style="font-weight: 600; color: var(--rd)">Ollama yanıt vermiyor</div>
+<div style="margin-top: 2px">d3:9b modeline <span style="font-family: ui-monospace, monospace; font-size: 12px">http://localhost:11434</span> adresinden ulaşılamıyor. Yeni gelen 5 e-posta sınıflandırılmayı bekliyor; Gmail'de hiçbir şey değişmedi.</div>
+</div>
+<a href="{{L.settings.href}}" onClick="{{L.settings.go}}" style="font-size: 12px; font-weight: 500">Adresi değiştir</a>
+<button type="button" onClick="{{startModel}}" disabled="{{olBusy}}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--btn); color: #FFFFFF; font-weight: 500; display: inline-flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"></path></svg>{{olBtn}}</button>
+</section>
+</sc-if>
+<sc-if value="{{gmDown}}" hint-placeholder-val="{{false}}">
+<section aria-label="Gmail bağlantısı" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px; background: var(--rdBg); border: 1px solid var(--rd); border-radius: 10px">
+<div aria-hidden="true" style="flex: none; width: 38px; height: 38px; border-radius: 9px; background: var(--card); border: 1px solid var(--line); color: var(--rd); display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7a5 5 0 0 1 0-10h2M15 7h2a5 5 0 0 1 4 8"></path><path d="M8 12h4M3 3l18 18"></path></svg></div>
+<div style="flex: 1 1 320px; min-width: 0">
+<div style="font-weight: 600; color: var(--rd)">Gmail bağlantısı koptu</div>
+<div style="margin-top: 2px">ali@gmail.com için erişim izni geçersiz ya da iptal edilmiş. Etiketleme ve arşivleme duraklatıldı; yeni kararlar kuyrukta bekliyor.</div>
+</div>
+<a href="{{L.accounts.href}}" onClick="{{L.accounts.go}}" style="font-size: 12px; font-weight: 500">Hesaplara git</a>
+<button type="button" onClick="{{reconnect}}" disabled="{{gmBusy}}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--btn); color: #FFFFFF; font-weight: 500; display: inline-flex; align-items: center; gap: 6px"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"></path><polyline points="21 3 21 9 15 9"></polyline></svg>{{gmBtn}}</button>
+</section>
+</sc-if>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+<div style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px">
+<div style="color: var(--mut); font-size: 12px; font-weight: 500">Bugün gelen</div>
+<div class="num" style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin-top: 4px">24</div>
+<div style="font-size: 12px; color: var(--mut); margin-top: 2px"><span style="color: var(--tx); font-weight: 500">↑ 3</span> dünden fazla (21) · 7 günde 132</div>
+</div>
+<div style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px">
+<div style="color: var(--mut); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--gn)"></span>İşlenen</div>
+<div class="num" style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin-top: 4px">14</div>
+<div style="font-size: 12px; color: var(--mut); margin-top: 2px">Gelenlerin %58'i · 9 onayda, 1 hatalı</div>
+</div>
+<div style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px">
+<div style="color: var(--mut); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--am)"></span>Onay bekleyen</div>
+<div class="num" style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin-top: 4px; color: var(--am)">{{pendingCount}}</div>
+<div style="font-size: 12px; color: var(--mut); margin-top: 2px"><a href="{{L.queue.href}}" onClick="{{L.queue.go}}">Kuyruğu aç →</a></div>
+</div>
+<div style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px">
+<div style="color: var(--mut); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: var(--rd)"></span>Hata</div>
+<div class="num" style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin-top: 4px; color: var(--rd)">1</div>
+<div style="font-size: 12px; color: var(--mut); margin-top: 2px">Gmail API sınırı (429)</div>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<section style="flex: 2 1 560px; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600">İşlem bekleyen e-postalar</h2>
+<span class="num" style="font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--amBg); color: var(--am)">{{pendingCount}}</span>
+<a href="{{L.queue.href}}" onClick="{{L.queue.go}}" style="margin-left: auto; font-size: 12px; font-weight: 500">Tümünü gör</a>
+</div>
+<div style="display: flex; gap: 16px; padding: 6px 16px; border-top: 1px solid var(--line); background: var(--sub); font-size: 11px; font-weight: 500; color: var(--mut); text-transform: uppercase; letter-spacing: 0.04em">
+<span style="flex: 1 1 260px">Gönderen / konu</span>
+<span style="flex: 0 0 150px">Kategori · güven</span>
+<span style="flex: 0 0 170px">Önerilen işlem</span>
+<span style="flex: 0 0 130px; text-align: right">Karar</span>
+</div>
+<sc-if value="{{noPending}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 16px; border-top: 1px solid var(--line); text-align: center">
+<div aria-hidden="true" style="width: 40px; height: 40px; border-radius: 50%; background: var(--gnBg); color: var(--gn); display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+<div style="font-weight: 600">Onay bekleyen e-posta yok</div>
+<div style="color: var(--mut); max-width: 360px">Eşiğin altında kalan yeni bir karar olduğunda burada görünecek. Son kontrol 14:42.</div>
+<a href="{{L.rules.href}}" onClick="{{L.rules.go}}" style="font-size: 12px; font-weight: 500">Kural eşiklerini gör</a>
+</div>
+</sc-if>
+<sc-for list="{{pending}}" as="it" hint-placeholder-count="5">
+<div class="row" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 11px 16px; border-top: 1px solid var(--line)">
+<div style="flex: 1 1 260px; min-width: 0; display: flex; gap: 10px; align-items: center">
+<div aria-hidden="true" style="flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--sub); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--mut)">{{it.ini}}</div>
+<div style="min-width: 0">
+<div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.from}} <span class="num" style="color: var(--mut); font-weight: 400">· {{it.time}}</span></div>
+<div style="color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.subj}}</div>
+</div>
+</div>
+<div style="flex: 0 0 150px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 11px; font-weight: 500; padding: 1px 7px; border: 1px solid var(--line2); border-radius: 5px">{{it.cat}}</span>
+<span class="num" style="font-size: 12px; font-weight: 600">{{it.sc}}</span>
+</div>
+<div style="height: 4px; border-radius: 2px; background: var(--bar)"><div style="height: 4px; border-radius: 2px; background: var(--acc); width: {{it.w}}"></div></div>
+</div>
+<div style="flex: 0 0 170px; font-size: 12px; font-weight: 500">{{it.act}}</div>
+<div style="flex: 0 0 130px; display: flex; gap: 6px; justify-content: flex-end">
+<sc-if value="{{it.open}}" hint-placeholder-val="{{true}}">
+<button class="ib" type="button" onClick="{{it.ok}}" style="height: 36px; padding: 0 11px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--gn); font-size: 12px; font-weight: 600"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>{{okLabel}}</button>
+<button class="ib" type="button" aria-label="Reddet" onClick="{{it.no}}" style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--rd)"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</sc-if>
+<sc-if value="{{it.approved}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 6px; background: var(--gnBg); color: var(--gn)">{{okDone}}</span>
+</sc-if>
+<sc-if value="{{it.rejected}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 6px; background: var(--gyBg); color: var(--gy)">Reddedildi</span>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</section>
+
+<section style="flex: 1 1 300px; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px">
+<div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600">Kategori dağılımı</h2>
+<span style="font-size: 12px; color: var(--mut)">7 gün</span>
+<span class="num" style="margin-left: auto; font-size: 12px; color: var(--mut)">{{total}} e-posta</span>
+</div>
+<div role="img" aria-label="Son 7 günde kategori dağılımı: Bülten 44, Fatura 38, Müşteri 27, Diğer 14, Spam 9" style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px">
+<sc-for list="{{cats}}" as="c" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="flex: 0 0 64px; font-size: 12px; color: var(--mut)">{{c.label}}</span>
+<div style="flex: 1 1 auto; height: 18px; border-radius: 4px; background: var(--sub)"><div style="height: 18px; border-radius: 4px; background: var(--acc); width: {{c.w}}"></div></div>
+<span class="num" style="flex: 0 0 64px; text-align: right; font-size: 12px"><span style="font-weight: 600">{{c.v}}</span> <span style="color: var(--mut)">{{c.pct}}</span></span>
+</div>
+</sc-for>
+</div>
+<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mut)">En sık kategori <span style="color: var(--tx); font-weight: 500">Bülten</span>; 44 arşivleme kararının 11'i geri alındı.</div>
+</section>
+</div>
+
+<section style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600">Son işlemler</h2>
+<a href="#" style="margin-left: auto; font-size: 12px; font-weight: 500">Tüm kayıtlar</a>
+</div>
+<sc-for list="{{feed}}" as="f" hint-placeholder-count="6">
+<div class="row" style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 9px 16px; border-top: 1px solid var(--line)">
+<span class="num" style="flex: 0 0 44px; color: var(--mut); font-size: 12px">{{f.t}}</span>
+<span style="flex: 0 0 210px; display: inline-flex; align-items: center; gap: 8px; font-weight: 500"><span aria-hidden="true" style="flex: none; width: 7px; height: 7px; border-radius: 50%; background: {{f.dot}}"></span>{{f.act}}</span>
+<span style="flex: 1 1 220px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.subj}}</span>
+<span style="flex: 0 0 130px; font-size: 12px; color: var(--mut)">{{f.cat}} · <span class="num" style="color: var(--tx)">{{f.sc}}</span></span>
+<span style="flex: 0 0 90px; text-align: right; font-size: 12px">
+<sc-if value="{{f.undo}}" hint-placeholder-val="{{true}}"><a href="#">Geri al</a></sc-if>
+<sc-if value="{{f.retry}}" hint-placeholder-val="{{false}}"><a href="#">Tekrar dene</a></sc-if>
+<sc-if value="{{f.dry}}" hint-placeholder-val="{{false}}"><span style="color: var(--mut)">Uygulanmadı</span></sc-if>
+</span>
+</div>
+</sc-for>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"kuruMod":{"editor":"boolean","default":true},"embedded":{"editor":null},"go":{"editor":null},"onFix":{"editor":null},"durum":{"editor":"enum","options":["normal","ollama-kapali","gmail-koptu","bos-kuyruk"],"default":"normal"},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { decided: {} }; }
+  renderVals() {
+    const dark = this.state.dark ?? (this.props.dark ?? false);
+    const d = this.state.decided;
+    const durum = this.props.durum ?? 'normal';
+    const base = [
+      { id: 1, ini: 'AK', from: 'Ayşe Kaya', time: '14:41', subj: 'Sözleşme taslağı bugün imzalanmalı', cat: 'Acil', s: 0.91, act: 'Etiket: Acil + Yıldız' },
+      { id: 2, ini: 'EF', from: 'e-Fatura Bildirim', time: '14:37', subj: 'Ekim 2026 dönemi faturanız oluşturuldu', cat: 'Fatura', s: 0.88, act: 'Etiket: Fatura + Arşivle' },
+      { id: 3, ini: 'MD', from: 'Mehmet Demir', time: '14:22', subj: 'Sipariş #4821 hâlâ teslim edilmedi', cat: 'Müşteri', s: 0.74, act: 'Etiket: Müşteri + Yıldız' },
+      { id: 4, ini: 'TB', from: 'Teknoloji Bülteni', time: '13:56', subj: 'Haftanın öne çıkanları: yerel modeller', cat: 'Bülten', s: 0.67, act: 'Arşivle' },
+      { id: 5, ini: 'KF', from: 'kampanya@firsat-x.biz', time: '13:40', subj: 'Tebrikler! Hediye çekiniz sizi bekliyor', cat: 'Spam', s: 0.58, act: 'Etiket: Spam + Arşivle' }
+    ];
+    const set = (id, v) => this.setState({ decided: { ...this.state.decided, [id]: v } });
+    const pending = (durum === 'bos-kuyruk' ? [] : base).map((x) => ({
+      ...x,
+      sc: x.s.toFixed(2),
+      w: Math.round(x.s * 100) + '%',
+      open: !d[x.id],
+      approved: d[x.id] === 'ok',
+      rejected: d[x.id] === 'no',
+      ok: () => set(x.id, 'ok'),
+      no: () => set(x.id, 'no')
+    }));
+    const raw = [['Bülten', 44], ['Fatura', 38], ['Müşteri', 27], ['Diğer', 14], ['Spam', 9]];
+    const total = raw.reduce((a, r) => a + r[1], 0);
+    const cats = raw.map(([label, v]) => ({ label, v, w: Math.round((v / 44) * 100) + '%', pct: '%' + Math.round((v / total) * 100) }));
+    const G = 'var(--gn)', R = 'var(--rd)', Y = 'var(--gy)';
+    const feed = [
+      { t: '14:32', dot: G, act: 'Etiket: Acil + Yıldız', subj: 'Sunucu bakım çalışması bu gece 23:00’te', cat: 'Acil', sc: '0.94', undo: true },
+      { t: '14:28', dot: G, act: 'Arşivlendi', subj: 'Haftalık bülten #212', cat: 'Bülten', sc: '0.89', undo: true },
+      { t: '14:21', dot: G, act: 'Etiket: Müşteri + Yıldız', subj: 'Teklif revizyonu hakkında', cat: 'Müşteri', sc: '0.82', undo: true },
+      { t: '14:15', dot: G, act: 'Etiket: Fatura', subj: 'Kasım dönemi kira faturası', cat: 'Fatura', sc: '0.93', undo: true },
+      { t: '14:02', dot: Y, act: 'Kuru mod: Arşivlenecekti', subj: 'Kampanya duyurusu: sonbahar indirimi', cat: 'Bülten', sc: '0.71', dry: true },
+      { t: '13:58', dot: R, act: 'Hata: Gmail API 429', subj: 'Proje toplantısı notları', cat: 'Diğer', sc: '0.63', retry: true }
+    ];
+    const dry = this.props.kuruMod ?? true;
+    const olDown = durum === 'ollama-kapali' && this.state.ol !== 'done';
+    const gmDown = durum === 'gmail-koptu' && this.state.gm !== 'done';
+    const pill = (bad, okTxt, badTxt) => bad
+      ? { bd: 'var(--rd)', bg: 'var(--rdBg)', dot: 'var(--rd)', fg: 'var(--rd)', fw: 600, txt: badTxt }
+      : { bd: 'var(--line)', bg: 'transparent', dot: 'var(--gn)', fg: 'var(--mut)', fw: 400, txt: okTxt };
+    const later = (k) => {
+      this.setState({ [k]: 'busy' });
+      this._t = this._t || [];
+      this._t.push(setTimeout(() => { this.setState({ [k]: 'done' }); if (this.props.onFix) this.props.onFix(k); }, 1600));
+    };
+    return {
+      tc: dark ? 'dk' : '',
+      alone: !this.props.embedded,
+      bandOn: !this.props.embedded && dry,
+      L: ['queue', 'settings', 'accounts', 'rules', 'logs'].reduce((o, k) => {
+        const file = { queue: 'Queue', settings: 'Settings', accounts: 'Accounts', rules: 'Rules', logs: 'Logs' }[k] + '.dc.html';
+        o[k] = { href: this.props.go ? '#' : file, go: (e) => { if (this.props.go) { e.preventDefault(); this.props.go(k); } } };
+        return o;
+      }, {}),
+      toggleTheme: () => this.setState({ dark: !dark }),
+      dry,
+      okLabel: dry ? 'Öner' : 'Uygula',
+      okDone: dry ? 'Önerildi' : 'Uygulandı',
+      gmP: pill(gmDown, 'bağlı', 'bağlantı koptu'),
+      olP: pill(olDown, 'hazır', 'kapalı'),
+      olDown,
+      gmDown,
+      olBusy: this.state.ol === 'busy',
+      olBtn: this.state.ol === 'busy' ? 'Başlatılıyor…' : 'Modeli başlat',
+      startModel: () => later('ol'),
+      gmBusy: this.state.gm === 'busy',
+      gmBtn: this.state.gm === 'busy' ? 'Bağlanıyor…' : 'Yeniden bağlan',
+      reconnect: () => later('gm'),
+      pending,
+      noPending: pending.length === 0,
+      pendingCount: durum === 'bos-kuyruk' ? 0 : 9 - Object.keys(d).length,
+      cats,
+      total,
+      feed
+    };
+  }
+}
+</script>
+</body>
+</html>
