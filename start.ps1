@@ -33,4 +33,6 @@ npm --prefix $front run build
 Write-Host 'MailKarar http://127.0.0.1:8000 adresinde başlıyor (durdurmak için Ctrl+C).'
 Start-Process 'http://127.0.0.1:8000'
 Set-Location (Join-Path $root 'backend')
+# uvicorn günlüğünü stderr'e yazar; çıktı yönlendirilince PowerShell 5.1 bunu 'Stop' altında hata sayıp sunucuyu durdurur.
+$ErrorActionPreference = 'Continue'
 & $py -W ignore::FutureWarning -m uvicorn app.main:app --host 127.0.0.1 --port 8000
