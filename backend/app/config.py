@@ -6,7 +6,7 @@ from typing import Any
 from . import db
 
 DEFAULTS: dict[str, Any] = {
-    "model": "d3:9b",
+    "model": "tev1:4b",
     "ollamaUrl": "http://localhost:11434",
     "pollMinutes": 5,
     "maxChars": 2000,

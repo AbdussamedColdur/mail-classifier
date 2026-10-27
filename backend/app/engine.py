@@ -85,6 +85,7 @@ def scan() -> None:
 
 
 def scheduler() -> None:
+    classifier.warm_up(config.get())
     while True:
         scan()
         _wake.clear()
@@ -111,23 +112,28 @@ def process_waiting(settings: dict[str, Any]) -> None:
 
 
 def run_rules(settings: dict[str, Any], email: dict[str, Any], rules: list[dict[str, Any]]) -> None:
+    """Ask every question first and record only when all answered: if the model fails halfway the
+    e-mail stays waiting and is retried whole on the next scan, without duplicate decisions."""
     content = text.for_model(email, int(settings["maxChars"]), bool(settings["stripQuotes"]))
     cat = classifier.classify(settings, content, config.CATEGORY_QUESTION, config.CATEGORIES)
     category, _ = cat.top
-    db.execute("UPDATE emails SET category = ?, category_scores = ? WHERE id = ?", (category, db.j(cat.scores), email["id"]))
 
+    answered = []
     for rule in rules:
-        ops = db.unj(rule["actions"], [])
         if rule["category"]:
             if rule["category"] != category:
                 continue
-            result, question, target = cat, config.CATEGORY_QUESTION, category
+            answered.append((rule, cat, config.CATEGORY_QUESTION, category))
         else:
             options = db.unj(rule["options"], [])
             result = classifier.classify(settings, content, rule["question"], options)
-            question, target = rule["question"], options[0]["key"]
-            if result.top[0] != target:
+            if result.top[0] != options[0]["key"]:
                 continue
+            answered.append((rule, result, rule["question"], options[0]["key"]))
+
+    db.execute("UPDATE emails SET category = ?, category_scores = ? WHERE id = ?", (category, db.j(cat.scores), email["id"]))
+    for rule, result, question, target in answered:
+        ops = db.unj(rule["actions"], [])
         decide(settings, email, result, question, target, rule["threshold"], ops, rule["mode"],
                rule_id=rule["id"], source=rule["name"], category=rule["category"] or _label_of(ops) or category)
 

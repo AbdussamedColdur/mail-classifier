@@ -4,11 +4,13 @@ Run from backend/: .venv\\Scripts\\python -m unittest discover -s tests -v
 """
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
+import httpx
 from fastapi.testclient import TestClient
 
 from app import api, classifier, config, db, engine, gmail
@@ -82,7 +84,7 @@ class SmokeTest(unittest.TestCase):
         p = mock.patch.object(classifier, "classify", fake_classify)
         p.start()
         self.patches.append(p)
-        p = mock.patch.object(classifier, "ollama_status", lambda url: {"running": True, "version": "0.41.0", "models": ["d3:9b"]})
+        p = mock.patch.object(classifier, "ollama_status", lambda url: {"running": True, "version": "0.40.11", "models": ["tev1:4b"], "decision": ["tev1:4b"]})
         p.start()
         self.patches.append(p)
         self.client = TestClient(app)
@@ -162,6 +164,21 @@ class SmokeTest(unittest.TestCase):
         engine.scan()  # model back
         self.assertEqual(self.client.get("/api/status").json()["waiting"], 0)
 
+    def test_model_failing_halfway_records_nothing_and_retries_whole(self):
+        def category_only(settings, content, question, options):
+            if question != config.CATEGORY_QUESTION:
+                raise classifier.ModelError("Ollama bağlantısı koptu")
+            return fake_classify(settings, content, question, options)
+        with mock.patch.object(classifier, "classify", category_only):
+            engine.scan()
+        self.assertEqual(db.one("SELECT COUNT(*) AS n FROM decisions")["n"], 0)
+        self.assertEqual(db.one("SELECT COUNT(*) AS n FROM emails WHERE processed_at IS NULL")["n"], 3)
+        engine.scan()
+        engine.scan()
+        n = db.one("SELECT COUNT(*) AS n, COUNT(DISTINCT email_id || source) AS u FROM decisions")
+        self.assertEqual((n["n"], n["u"]), (4, 4))
+        self.assertEqual(db.one("SELECT COUNT(*) AS n FROM emails WHERE processed_at IS NULL")["n"], 0)
+
     def test_rules_crud_and_validation(self):
         c = self.client
         r = c.post("/api/rules", json={"name": "Test", "question": "Bu bir test mi?", "threshold": 0.8, "actions": ["label:Test", "star"], "mode": "report"})
@@ -200,13 +217,108 @@ class TextTest(unittest.TestCase):
         tr = "Tamam.\n\n26 Eki 2026 Pzt 10:00 tarihinde Ali şunu yazdı:\n> önceki"
         self.assertEqual(text.strip_quotes(tr), "Tamam.")
 
-    def test_d3_probability_shapes(self):
-        p = classifier._probability
-        self.assertEqual(p({"noul": 0.7}, "q"), 0.7)
-        self.assertEqual(p({"noul": {"true": 0.2, "false": 0.8}}, "q"), 0.2)
-        self.assertEqual(p({"noul": True}, "q"), 1.0)
+
+TAGS = {"models": [
+    {"name": "tev1:4b", "capabilities": ["decision"]},
+    {"name": "d3:9b", "capabilities": ["decision", "vision"]},
+    {"name": "qwen3:8b", "capabilities": ["completion", "tools"]},
+]}
+SETTINGS = {"ollamaUrl": "http://ollama.test", "model": "tev1:4b"}
+YES_NO = config.yes_no("Acil mi?")
+THREE = [{"key": "Banka", "description": "Hesap hareketi"}, {"key": "Fatura", "description": ""}, {"key": "Diğer", "description": ""}]
+
+
+class ClassifierTest(unittest.TestCase):
+    """The real request/response shapes of Ollama 0.40.11's /v1/systemone, against a fake server."""
+
+    def setUp(self):
+        self.requests: list[tuple[str, dict]] = []
+        self.replies: list = []  # popped per non-tags request: a Response, an exception or a body dict
+        self.sleeps: list[float] = []
+        classifier._caps.clear()
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path == "/api/tags":
+                return httpx.Response(200, json=TAGS)
+            self.requests.append((request.url.path, json.loads(request.content)))
+            reply = self.replies.pop(0)
+            if isinstance(reply, Exception):
+                raise reply
+            return reply if isinstance(reply, httpx.Response) else httpx.Response(200, json=reply)
+
+        self.patches = [
+            mock.patch.object(classifier, "_http", httpx.Client(transport=httpx.MockTransport(handler))),
+            mock.patch.object(classifier, "_sleep", self.sleeps.append),
+        ]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self):
+        for p in reversed(self.patches):
+            p.stop()
+
+    def test_yes_no_is_one_noul_question(self):
+        self.replies = [{"model": "tev1:4b", "answers": {"q": {"type": "noul", "noul": 0.99}}}]
+        r = classifier.classify(SETTINGS, "metin", "Acil mi?", YES_NO)
+        self.assertAlmostEqual(r.scores["Evet"], 0.99)
+        self.assertAlmostEqual(r.scores["Hayır"], 0.01)
+        path, body = self.requests[0]
+        self.assertEqual(path, "/v1/systemone")
+        self.assertEqual(body["questions"]["q"]["type"], "noul")
+        self.assertEqual(set(body["questions"]["q"]["criteria"]), {"true", "false"})
+
+    def test_list_is_one_choice_question_scored_by_probabilities(self):
+        self.replies = [{"answers": {"q": {"type": "choice", "choice": "Banka", "confidence": 0.83,
+                                           "probabilities": {"Banka": 0.9, "Fatura": 0.08, "Diğer": 0.02}}}}]
+        r = classifier.classify(SETTINGS, "metin", "Hangi kategori?", THREE)
+        self.assertEqual(r.top, ("Banka", 0.9))
+        q = self.requests[0][1]["questions"]["q"]
+        self.assertEqual(len(self.requests), 1)
+        self.assertEqual((q["type"], q["criteria"]["Banka"], q["criteria"]["Fatura"]), ("choice", "Hesap hareketi", "Fatura"))
+
+    def test_capability_not_name_picks_the_endpoint(self):
+        self.replies = [{"message": {"content": json.dumps({"scores": {"Evet": 0.2, "Hayır": 0.8}})}}]
+        classifier.classify({**SETTINGS, "model": "qwen3:8b"}, "metin", "Acil mi?", YES_NO)
+        self.assertEqual(self.requests[0][0], "/api/chat")
+        self.assertTrue(classifier.is_decision_model(SETTINGS["ollamaUrl"], "d3:9b"))
+
+    def test_unexpected_answer_is_a_model_error(self):
+        for answer in ({"type": "noul", "noul": True}, {"type": "noul"}, None):
+            self.replies = [{"answers": {"q": answer}}]
+            with self.assertRaises(classifier.ModelError):
+                classifier.classify(SETTINGS, "metin", "Acil mi?", YES_NO)
+        self.replies = [{"answers": {"q": {"type": "choice", "probabilities": {"Başka": 1.0}}}}]
         with self.assertRaises(classifier.ModelError):
-            p({"noul": [1, 2]}, "q")
+            classifier.classify(SETTINGS, "metin", "Hangi?", THREE)
+
+    def test_retries_500_and_dropped_connection_twice(self):
+        ok = {"answers": {"q": {"type": "noul", "noul": 0.7}}}
+        self.replies = [httpx.Response(500, text="boom"), httpx.RemoteProtocolError("Server disconnected"), ok]
+        self.assertAlmostEqual(classifier.classify(SETTINGS, "m", "Acil mi?", YES_NO).scores["Evet"], 0.7)
+        self.assertEqual(self.sleeps, [2, 5])
+
+        self.sleeps.clear()
+        self.replies = [httpx.Response(500, text="boom")] * 3
+        with self.assertRaises(classifier.ModelError):
+            classifier.classify(SETTINGS, "m", "Acil mi?", YES_NO)
+        self.assertEqual(self.sleeps, [2, 5])
+
+    def test_4xx_is_not_retried(self):
+        self.replies = [httpx.Response(404, json={"error": "model 'tev1:4b' not found"})]
+        with self.assertRaises(classifier.ModelError):
+            classifier.classify(SETTINGS, "m", "Acil mi?", YES_NO)
+        self.assertEqual((len(self.requests), self.sleeps), (1, []))
+
+    def test_warm_up_loads_the_selected_model_once(self):
+        self.replies = [{"answers": {"q": {"type": "noul", "noul": 0.5}}}, {"done": True, "done_reason": "load"}]
+        classifier.warm_up(SETTINGS)
+        classifier.warm_up({**SETTINGS, "model": "qwen3:8b"})
+        self.assertEqual([(p, b["model"]) for p, b in self.requests], [("/v1/systemone", "tev1:4b"), ("/api/generate", "qwen3:8b")])
+
+    def test_warm_up_failure_is_only_logged(self):
+        self.replies = [httpx.ConnectError("refused")] * 3
+        with self.assertLogs("mailkarar", "WARNING"):
+            classifier.warm_up(SETTINGS)
 
 
 if __name__ == "__main__":
