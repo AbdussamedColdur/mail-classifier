@@ -39,6 +39,8 @@ export interface Action {
   snippet: string
   receivedAt: string
   category: string
+  /** category: the decision is the e-mail's category; question: a rule's own yes/no question */
+  kind: RuleKind
   question: string
   scores: Score[]
   topKey: string
@@ -59,20 +61,27 @@ export interface Action {
 
 export interface Option { key: string; description: string }
 
+export interface Category { key: string; description: string; neverArchive: boolean }
+
+export type RuleKind = 'category' | 'question'
+
 export interface Rule {
   id: number
   name: string
+  /** For a question rule: ask only in this category (null: every e-mail). */
   category: string | null
+  kind: RuleKind
   question: string
   options: Option[]
   threshold: number
   actions: string[]
   mode: Mode
+  modeLocked: boolean
   enabled: boolean
   stats7d: { triggered: number; undone: number }
 }
 
-export type RuleInput = Omit<Rule, 'id' | 'options' | 'stats7d'>
+export type RuleInput = Omit<Rule, 'id' | 'options' | 'stats7d' | 'modeLocked'>
 
 export interface Task {
   id: number

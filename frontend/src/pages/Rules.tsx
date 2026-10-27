@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { api } from '../api/client'
-import type { CategoryStats, Mode, Rule, RuleInput } from '../api/types'
+import type { Category, CategoryStats, Mode, Rule, RuleInput, RuleKind } from '../api/types'
 import * as Ic from '../components/Icons'
-import { Bar, Switch } from '../components/Layout'
-import { useApp, usePoll } from '../lib/app'
+import { Bar, Seg, Switch } from '../components/Layout'
+import { useApp, useAsync, usePoll } from '../lib/app'
 import { MODE_COLORS, MODE_LABEL, opsText } from '../lib/format'
 
 const TABS = ['Tümü', 'Etkin', 'Kapalı', 'Dikkat'] as const
-const CATEGORY_KEYS = ['Fatura', 'Müşteri', 'Bülten', 'Spam', 'Diğer']
+const scopeText = (r: Rule) => (r.kind === 'category' ? 'Kategori: ' + r.category : r.category ? `Evet/hayır · yalnızca ${r.category}` : 'Kategoriden bağımsız')
 const ratio = (r: Rule) => (r.stats7d.triggered ? r.stats7d.undone / r.stats7d.triggered : 0)
 const needsCare = (r: Rule) => r.enabled && r.stats7d.triggered > 0 && ratio(r) >= 0.2
 
 export default function Rules() {
   const { toast } = useApp()
+  const categories = useAsync(api.categoryList).data ?? []
   const [rules, setRules] = useState<Rule[] | null>(null)
   const [cats, setCats] = useState<CategoryStats | null>(null)
   const [tab, setTab] = useState<(typeof TABS)[number]>('Tümü')
@@ -65,7 +66,7 @@ export default function Rules() {
         </div>
       </div>
 
-      {editing && <RuleEditor rule={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load() }} />}
+      {editing && <RuleEditor rule={editing === 'new' ? null : editing} categories={categories} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load() }} />}
 
       <div role="group" aria-label="Kural filtresi" className="seg" style={{ alignSelf: 'flex-start' }}>
         {TABS.map((t) => (
@@ -96,7 +97,7 @@ export default function Rules() {
               <div style={{ flex: '1 1 300px', minWidth: 0, opacity: op }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontWeight: 600 }}>{r.name}</span>
-                  <span style={{ fontSize: 11, fontWeight: 500, padding: '0 6px', border: '1px solid var(--line2)', borderRadius: 4, color: 'var(--mut)' }}>{r.category ? 'Kategori: ' + r.category : 'Kategoriden bağımsız'}</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, padding: '0 6px', border: '1px solid var(--line2)', borderRadius: 4, color: 'var(--mut)' }}>{scopeText(r)}</span>
                 </div>
                 <div className="ellipsis" style={{ color: 'var(--mut)' }}>“{r.question}”</div>
               </div>
@@ -131,7 +132,7 @@ export default function Rules() {
                   <Ic.Warn s={14} />
                   <span style={{ flex: '1 1 280px', fontWeight: 500 }}>Bu kuralın kararlarının %{Math.round(ratio(r) * 100)}'i geri alındı. Eşiği {next.toFixed(2)}'e yükseltmeyi ya da modu “Onaya gönder” yapmayı düşünün.</span>
                   <button type="button" onClick={() => patch(r, { threshold: Number(next.toFixed(2)) })} style={warnBtn}>Eşiği {next.toFixed(2)} yap</button>
-                  {r.mode !== 'approve' && <button type="button" onClick={() => patch(r, { mode: 'approve' })} style={warnBtn}>Onaya gönder</button>}
+                  {r.mode !== 'approve' && !r.modeLocked && <button type="button" onClick={() => patch(r, { mode: 'approve' })} style={warnBtn}>Onaya gönder</button>}
                 </div>
               )}
             </div>
@@ -155,11 +156,12 @@ function Stat({ label, value, unit, sub }: { label: string; value: number; unit?
   )
 }
 
-function RuleEditor({ rule, onClose, onSaved }: { rule: Rule | null; onClose: () => void; onSaved: () => void }) {
+function RuleEditor({ rule, categories, onClose, onSaved }: { rule: Rule | null; categories: Category[]; onClose: () => void; onSaved: () => void }) {
   const { toast } = useApp()
   const labelOf = (ops: string[]) => ops.find((o) => o.startsWith('label:'))?.slice(6) ?? ''
   const [name, setName] = useState(rule?.name ?? '')
   const [category, setCategory] = useState<string>(rule?.category ?? '')
+  const [kind, setKind] = useState<RuleKind>(rule?.kind ?? 'question')
   const [question, setQuestion] = useState(rule?.question ?? '')
   const [th, setTh] = useState(rule?.threshold ?? 0.8)
   const [mode, setMode] = useState<Mode>(rule?.mode ?? 'approve')
@@ -172,14 +174,17 @@ function RuleEditor({ rule, onClose, onSaved }: { rule: Rule | null; onClose: ()
   })
   const [saving, setSaving] = useState(false)
 
-  const ops = [flags.label && label.trim() && `label:${label.trim()}`, flags.star && 'star', flags.archive && 'archive', flags.read && 'read'].filter(Boolean) as string[]
+  // Without a category a rule can only ask its own question.
+  const effKind: RuleKind = category ? kind : 'question'
+  const noArchive = categories.some((c) => c.key === category && c.neverArchive)
+  const ops = [flags.label && label.trim() && `label:${label.trim()}`, flags.star && 'star', flags.archive && !noArchive && 'archive', flags.read && 'read'].filter(Boolean) as string[]
 
   const save = async () => {
     setSaving(true)
     try {
       const body = { name: name.trim(), question: question.trim(), threshold: th, actions: ops, mode }
       if (rule) await api.patchRule(rule.id, body)
-      else await api.createRule({ ...body, category: category || null, enabled: true })
+      else await api.createRule({ ...body, category: category || null, kind: effKind, enabled: true })
       onSaved()
     } catch (e) {
       toast({ title: 'Kural kaydedilemedi', sub: (e as Error).message })
@@ -187,11 +192,14 @@ function RuleEditor({ rule, onClose, onSaved }: { rule: Rule | null; onClose: ()
     setSaving(false)
   }
 
-  const box = (k: keyof typeof flags, text: string) => (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, padding: '0 10px', border: `1px solid ${flags[k] ? 'var(--acc)' : 'var(--line)'}`, borderRadius: 8, background: flags[k] ? 'var(--accSoft)' : 'var(--card)' }}>
-      <input type="checkbox" checked={flags[k]} onChange={() => setFlags({ ...flags, [k]: !flags[k] })} />{text}
-    </label>
-  )
+  const box = (k: keyof typeof flags, text: string, disabled = false) => {
+    const on = flags[k] && !disabled
+    return (
+      <label title={disabled ? `${category} e-postaları arşivlenemez` : undefined} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, padding: '0 10px', border: `1px solid ${on ? 'var(--acc)' : 'var(--line)'}`, borderRadius: 8, background: on ? 'var(--accSoft)' : 'var(--card)', opacity: disabled ? 0.5 : 1 }}>
+        <input type="checkbox" checked={on} disabled={disabled} onChange={() => setFlags({ ...flags, [k]: !flags[k] })} />{text}
+      </label>
+    )
+  }
 
   return (
     <section className="card" aria-label={rule ? 'Kuralı düzenle' : 'Yeni kural'} style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -202,13 +210,22 @@ function RuleEditor({ rule, onClose, onSaved }: { rule: Rule | null; onClose: ()
         </label>
         <label style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>Kapsam
           <select className="select" value={category} disabled={!!rule} onChange={(e) => setCategory(e.target.value)} style={{ height: 36, fontWeight: 400 }}>
-            <option value="">Kategoriden bağımsız (evet/hayır sorusu)</option>
-            {CATEGORY_KEYS.map((c) => <option key={c} value={c}>Kategori: {c}</option>)}
+            <option value="">Tüm e-postalar (evet/hayır sorusu)</option>
+            {categories.map((c) => <option key={c.key} value={c.key}>Kategori: {c.key}</option>)}
           </select>
         </label>
       </div>
+      {category && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, fontSize: 12 }}>
+          <Seg inset label="Kural türü" value={effKind} onChange={(k) => { if (!rule) setKind(k) }}
+            items={[{ key: 'category', label: 'Kategori kararına göre' }, { key: 'question', label: 'Bu kategoride evet/hayır sor' }]} />
+          <span style={{ color: 'var(--mut)' }}>{effKind === 'category'
+            ? `E-posta ${category} olarak sınıflandırılınca işlem yapılır.`
+            : `Yalnızca ${category} e-postalarında aşağıdaki soru sorulur.`}</span>
+        </div>
+      )}
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>
-        {category ? 'Açıklama (kategori kararında kullanılmaz, listede görünür)' : 'Soru (d3 evet/hayır olarak yanıtlar)'}
+        {effKind === 'category' ? 'Açıklama (kategori kararında kullanılmaz, listede görünür)' : 'Soru (karar modeli evet/hayır olarak yanıtlar)'}
         <textarea rows={2} value={question} onChange={(e) => setQuestion(e.target.value)} style={{ padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 8, background: 'var(--card)', resize: 'vertical', fontWeight: 400 }} />
       </label>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
@@ -217,7 +234,7 @@ function RuleEditor({ rule, onClose, onSaved }: { rule: Rule | null; onClose: ()
           <input type="range" min={0.5} max={0.99} step={0.01} value={th} onChange={(e) => setTh(Number(e.target.value))} />
         </label>
         <label style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>Mod
-          <select className="select" value={mode} onChange={(e) => setMode(e.target.value as Mode)} style={{ height: 36, fontWeight: 400 }}>
+          <select className="select" value={mode} disabled={rule?.modeLocked} title={rule?.modeLocked ? 'Bu kuralın modu sabittir' : undefined} onChange={(e) => setMode(e.target.value as Mode)} style={{ height: 36, fontWeight: 400 }}>
             {(Object.keys(MODE_LABEL) as Mode[]).map((m) => <option key={m} value={m}>{MODE_LABEL[m]}</option>)}
           </select>
         </label>
@@ -226,7 +243,7 @@ function RuleEditor({ rule, onClose, onSaved }: { rule: Rule | null; onClose: ()
         {box('label', 'Etiket')}
         <input type="text" aria-label="Etiket adı" className="mono field" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Etiket adı" style={{ height: 34, width: 140 }} />
         {box('star', 'Yıldızla')}
-        {box('archive', 'Arşivle')}
+        {box('archive', 'Arşivle', noArchive)}
         {box('read', 'Okundu işaretle')}
       </div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

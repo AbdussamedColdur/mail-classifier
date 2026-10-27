@@ -47,6 +47,7 @@ def _action_out(r: dict[str, Any]) -> dict[str, Any]:
         "snippet": r["snippet"] or "",
         "receivedAt": r["received_at"],
         "category": r["category"] or "Diğer",
+        "kind": "category" if r["question"] == config.CATEGORY_QUESTION else "question",
         "question": r["question"],
         "scores": _scores(r["scores"]),
         "topKey": r["top_key"],
@@ -185,6 +186,8 @@ class BulkIn(BaseModel):
 
 @router.post("/queue/{action_id}/approve")
 def queue_approve(action_id: int, body: ApproveIn | None = None) -> dict[str, Any]:
+    if body and body.category and body.category not in config.CATEGORY_KEYS:
+        raise HTTPException(422, "Bilinmeyen kategori.")
     return _ok(engine.approve, action_id, body.category if body else None)
 
 
@@ -270,6 +273,8 @@ def actions_csv(range: str = "7d", status: Optional[str] = None, q: Optional[str
 class RuleIn(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     category: Optional[str] = None
+    # category: act on the category decision; question: ask own yes/no question (only in `category` if set)
+    kind: Optional[Literal["category", "question"]] = None
     question: str = Field(min_length=3, max_length=500)
     threshold: float = Field(ge=0.5, le=0.99)
     actions: list[str]
@@ -291,18 +296,21 @@ def _rule_out(r: dict[str, Any]) -> dict[str, Any]:
     st = db.one(
         "SELECT COUNT(*) AS triggered, SUM(a.status = 'undone') AS undone FROM decisions d "
         "JOIN actions a ON a.decision_id = d.id WHERE d.rule_id = ? AND d.created_at >= ?", (r["id"], since))
+    options = db.unj(r["options"], [])
     return {
-        "id": r["id"], "name": r["name"], "category": r["category"], "question": r["question"],
-        "options": db.unj(r["options"], []), "threshold": r["threshold"], "actions": db.unj(r["actions"], []),
-        "mode": r["mode"], "enabled": bool(r["enabled"]),
+        "id": r["id"], "name": r["name"], "category": r["category"], "kind": "question" if options else "category",
+        "question": r["question"], "options": options, "threshold": r["threshold"], "actions": db.unj(r["actions"], []),
+        "mode": r["mode"], "modeLocked": bool(r["mode_locked"]), "enabled": bool(r["enabled"]),
         "stats7d": {"triggered": st["triggered"] or 0, "undone": st["undone"] or 0},
     }
 
 
-def _valid_ops(ops: list[str]) -> list[str]:
+def _valid_ops(ops: list[str], category: str | None) -> list[str]:
     for op in ops:
         if not (op in ("star", "archive", "read") or (op.startswith("label:") and op[6:].strip())):
             raise HTTPException(422, f"Geçersiz işlem: {op}")
+    if "archive" in ops and category in config.NEVER_ARCHIVE:
+        raise HTTPException(422, f"{category} e-postaları arşivlenemez; güvenlik bildirimleri gelen kutusunda kalmalı.")
     return ops
 
 
@@ -311,14 +319,22 @@ def rules() -> list[dict[str, Any]]:
     return [_rule_out(r) for r in db.rows("SELECT * FROM rules ORDER BY id")]
 
 
+@router.get("/categories")
+def categories() -> list[dict[str, Any]]:
+    return [{**c, "neverArchive": c["key"] in config.NEVER_ARCHIVE} for c in config.CATEGORIES]
+
+
 @router.post("/rules")
 def create_rule(body: RuleIn) -> dict[str, Any]:
-    if body.category and body.category not in [c["key"] for c in config.CATEGORIES]:
+    if body.category and body.category not in config.CATEGORY_KEYS:
         raise HTTPException(422, "Bilinmeyen kategori.")
+    kind = body.kind or ("category" if body.category else "question")
+    if kind == "category" and not body.category:
+        raise HTTPException(422, "Kategori kuralı için bir kategori seçin.")
     rid = db.execute(
         "INSERT INTO rules(name, category, question, options, threshold, actions, mode, enabled, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (body.name, body.category, body.question, db.j([] if body.category else config.yes_no(body.question)),
-         body.threshold, db.j(_valid_ops(body.actions)), body.mode, int(body.enabled), db.now()))
+        (body.name, body.category, body.question, db.j([] if kind == "category" else config.yes_no(body.question)),
+         body.threshold, db.j(_valid_ops(body.actions, body.category)), body.mode, int(body.enabled), db.now()))
     return _rule_out(db.one("SELECT * FROM rules WHERE id = ?", (rid,)))
 
 
@@ -329,16 +345,18 @@ def patch_rule(rule_id: int, body: RulePatch) -> dict[str, Any]:
         raise HTTPException(404, "Kural bulunamadı.")
     sets: dict[str, Any] = {}
     data = body.model_dump(exclude_none=True)
+    if r["mode_locked"] and data.get("mode", r["mode"]) != r["mode"]:
+        raise HTTPException(422, "Bu kuralın modu değiştirilemez.")
     for key in ("name", "threshold", "mode"):
         if key in data:
             sets[key] = data[key]
     if "enabled" in data:
         sets["enabled"] = int(data["enabled"])
     if "actions" in data:
-        sets["actions"] = db.j(_valid_ops(data["actions"]))
-    if "question" in data:
+        sets["actions"] = db.j(_valid_ops(data["actions"], r["category"]))
+    if "question" in data and data["question"] != r["question"]:
         sets["question"] = data["question"]
-        if not r["category"]:
+        if db.unj(r["options"], []):  # a yes/no rule's criteria follow its question
             sets["options"] = db.j(config.yes_no(data["question"]))
     if sets:
         db.execute(f"UPDATE rules SET {', '.join(f'{k} = ?' for k in sets)} WHERE id = ?", (*sets.values(), rule_id))
@@ -402,7 +420,7 @@ def create_task(body: TaskIn) -> dict[str, Any]:
     tid = db.execute(
         "INSERT INTO tasks(name, query, question, options, threshold, actions, mode, dry_run, status, created_at) "
         "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 'running', ?)",
-        (name, body.query, body.question, db.j(options), body.threshold, db.j(_valid_ops(body.actions)), mode, int(body.dryRun), db.now()))
+        (name, body.query, body.question, db.j(options), body.threshold, db.j(_valid_ops(body.actions, None)), mode, int(body.dryRun), db.now()))
     engine.start_task(tid)
     return {"id": tid}
 

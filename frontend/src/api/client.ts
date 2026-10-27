@@ -1,5 +1,5 @@
 import type {
-  Account, Action, CategoryStats, CredentialsInfo, ModelInfo, Preview, Rule, RuleInput, Settings, Status, Task,
+  Account, Action, Category, CategoryStats, CredentialsInfo, ModelInfo, Preview, Rule, RuleInput, Settings, Status, Task,
   TaskInput, TodayStats,
 } from './types'
 
@@ -62,6 +62,7 @@ export const api = {
   redo: (ids: number[]) => req<Results>('POST', '/actions/redo', { ids }),
   retry: (id: number) => req<{ status: string }>('POST', `/actions/${id}/retry`),
 
+  categoryList: () => req<Category[]>('GET', '/categories'),
   rules: () => req<Rule[]>('GET', '/rules'),
   createRule: (r: RuleInput) => req<Rule>('POST', '/rules', r),
   patchRule: (id: number, p: Partial<RuleInput>) => req<Rule>('PATCH', `/rules/${id}`, p),

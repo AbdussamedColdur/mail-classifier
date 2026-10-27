@@ -10,6 +10,7 @@ from typing import Any, Iterator
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 DB_PATH = DATA_DIR / "mailkarar.db"
+SCHEMA_VERSION = 2  # PRAGMA user_version; SCHEMA below is always the latest layout
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS settings (
@@ -51,6 +52,7 @@ CREATE TABLE IF NOT EXISTS rules (
   threshold REAL NOT NULL,
   actions TEXT NOT NULL,
   mode TEXT NOT NULL,                         -- report | approve | apply
+  mode_locked INTEGER NOT NULL DEFAULT 0,     -- 1: the mode cannot be changed (Oltalama → always approve)
   enabled INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL
 );
@@ -138,9 +140,20 @@ def tx() -> Iterator[sqlite3.Connection]:
 
 
 def init() -> None:
+    """Create a new database at SCHEMA_VERSION; an existing one is upgraded by migrate.run()."""
     with tx() as con:
         con.execute("PRAGMA journal_mode=WAL")
+        fresh = not con.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'rules'").fetchone()
         con.executescript(SCHEMA)
+        if fresh:
+            con.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+        elif con.execute("PRAGMA user_version").fetchone()[0] == 0:
+            con.execute("PRAGMA user_version = 1")  # databases from before versioning
+
+
+def version() -> int:
+    with tx() as con:
+        return con.execute("PRAGMA user_version").fetchone()[0]
 
 
 def rows(sql: str, params: tuple | list = ()) -> list[dict[str, Any]]:

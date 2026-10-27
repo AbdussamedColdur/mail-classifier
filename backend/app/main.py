@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from . import api, config, db, engine
+from . import api, config, db, engine, migrate
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -18,6 +18,7 @@ FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     db.init()
+    migrate.run()
     config.seed_rules()
     engine.resume_interrupted_tasks()
     engine.start()

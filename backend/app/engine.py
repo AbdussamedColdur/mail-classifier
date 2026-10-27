@@ -120,22 +120,21 @@ def run_rules(settings: dict[str, Any], email: dict[str, Any], rules: list[dict[
 
     answered = []
     for rule in rules:
-        if rule["category"]:
-            if rule["category"] != category:
-                continue
+        if rule["category"] and rule["category"] != category:
+            continue
+        options = db.unj(rule["options"], [])
+        if not options:  # a category rule acts on the category decision itself
             answered.append((rule, cat, config.CATEGORY_QUESTION, category))
-        else:
-            options = db.unj(rule["options"], [])
-            result = classifier.classify(settings, content, rule["question"], options)
-            if result.top[0] != options[0]["key"]:
-                continue
-            answered.append((rule, result, rule["question"], options[0]["key"]))
+            continue
+        result = classifier.classify(settings, content, rule["question"], options)
+        if result.top[0] != options[0]["key"]:
+            continue
+        answered.append((rule, result, rule["question"], options[0]["key"]))
 
     db.execute("UPDATE emails SET category = ?, category_scores = ? WHERE id = ?", (category, db.j(cat.scores), email["id"]))
     for rule, result, question, target in answered:
-        ops = db.unj(rule["actions"], [])
-        decide(settings, email, result, question, target, rule["threshold"], ops, rule["mode"],
-               rule_id=rule["id"], source=rule["name"], category=rule["category"] or _label_of(ops) or category)
+        decide(settings, email, result, question, target, rule["threshold"], db.unj(rule["actions"], []), rule["mode"],
+               rule_id=rule["id"], source=rule["name"], category=category)
 
     db.execute("UPDATE emails SET processed_at = ?, error = NULL WHERE id = ?", (db.now(), email["id"]))
 
@@ -208,9 +207,11 @@ def approve(action_id: int, category: str | None = None) -> str:
         return a["status"]
     ops = db.unj(a["ops"], [])
     if category:
-        rule = db.one("SELECT actions FROM rules WHERE category = ? AND enabled = 1", (category,))
+        # The user corrected the model's category: take that category rule's actions instead.
+        rule = db.one("SELECT actions FROM rules WHERE category = ? AND options = '[]' AND enabled = 1", (category,))
         ops = db.unj(rule["actions"]) if rule else [f"label:{category}"]
         db.execute("UPDATE decisions SET category = ? WHERE id = ?", (category, a["decision_id"]))
+        db.execute("UPDATE emails SET category = ? WHERE id = ?", (category, a["email_id"]))
     if config.get()["dryRun"]:
         _set(action_id, "suggested", ops=db.j(ops))
         return "suggested"

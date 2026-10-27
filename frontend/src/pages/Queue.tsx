@@ -3,15 +3,14 @@ import { api } from '../api/client'
 import type { Action } from '../api/types'
 import { Bar } from '../components/Layout'
 import * as Ic from '../components/Icons'
-import { useApp, usePoll } from '../lib/app'
+import { useApp, useAsync, usePoll } from '../lib/app'
 import { opsText, score, statusBadge, when } from '../lib/format'
 
-const CATS = ['Tümü', 'Acil', 'Fatura', 'Müşteri', 'Bülten', 'Spam', 'Diğer']
-const CHANGE_TO = ['Acil', 'Fatura', 'Müşteri', 'Bülten', 'Spam', 'Diğer']
 type Sort = 'new' | 'asc' | 'desc'
 
 export default function Queue() {
   const { status, refreshStatus, toast } = useApp()
+  const categories = useAsync(api.categoryList).data?.map((c) => c.key) ?? []
   const [items, setItems] = useState<Action[] | null>(null)
   const [filter, setFilter] = useState('Tümü')
   const [q, setQ] = useState('')
@@ -78,7 +77,7 @@ export default function Queue() {
           <input type="search" placeholder="Gönderen veya konu ara" value={q} onChange={(e) => setQ(e.target.value)} />
         </label>
         <div role="group" aria-label="Kategori filtresi" className="seg">
-          {CATS.map((c) => (
+          {['Tümü', ...categories].map((c) => (
             <button key={c} type="button" aria-pressed={filter === c} onClick={() => setFilter(c)}>
               {c} <span className="num" style={{ color: 'var(--mut)' }}>{(items ?? []).filter((a) => c === 'Tümü' || a.category === c).length}</span>
             </button>
@@ -182,12 +181,14 @@ export default function Queue() {
               </div>
               {x.status === 'pending' && (
                 <>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>Kategoriyi değiştir
-                    <select className="select" value={newCat} onChange={(e) => setNewCat(e.target.value)} style={{ fontWeight: 400 }}>
-                      <option value="">{x.category} (model önerisi)</option>
-                      {CHANGE_TO.filter((c) => c !== x.category).map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </label>
+                  {x.kind === 'category' && (
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 500 }}>Kategoriyi değiştir
+                      <select className="select" value={newCat} onChange={(e) => setNewCat(e.target.value)} style={{ fontWeight: 400 }}>
+                        <option value="">{x.category} (model önerisi)</option>
+                        {categories.filter((c) => c !== x.category).map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </label>
+                  )}
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button type="button" className="btn-p" disabled={busy} onClick={() => run(() => api.approve(x.id, newCat || undefined), 'Onaylanamadı')} style={{ flex: '1 1 0', height: 38 }}><Ic.Check s={15} w={2.2} />Onayla ve {dry ? 'öner' : 'uygula'}</button>
                     <button className="btn ib" type="button" disabled={busy} onClick={() => run(() => api.reject(x.id), 'Reddedilemedi')} style={{ height: 38, padding: '0 14px', color: 'var(--rd)' }}>Reddet</button>

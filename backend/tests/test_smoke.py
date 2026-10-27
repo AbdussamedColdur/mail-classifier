@@ -13,15 +13,17 @@ from unittest import mock
 import httpx
 from fastapi.testclient import TestClient
 
-from app import api, classifier, config, db, engine, gmail
+from app import api, classifier, config, db, engine, gmail, migrate
 from app.main import app
 
 MAILS = {
     "m1": {"from_name": "e-Fatura Bildirim", "from_addr": "bildirim@e-fatura.example", "subject": "Ekim faturanız oluşturuldu", "body": "Son ödeme 10 Kasım."},
     "m2": {"from_name": "Teknoloji Bülteni", "from_addr": "haber@bulten.example", "subject": "Haftanın öne çıkanları", "body": "Bu hafta..."},
     "m3": {"from_name": "Mehmet Demir", "from_addr": "mehmet@example.com", "subject": "Sipariş #4821 gelmedi", "body": "Dönüş bekliyorum.\n\nOn Mon, X wrote:\n> eski"},
+    "m4": {"from_name": "Banka Güvenlik", "from_addr": "guvenlik@banka-dogrulama.example", "subject": "Hesabınız askıya alındı", "body": "Şifrenizi bu bağlantıdan doğrulayın."},
 }
-CATEGORY_OF = {"m1": ("Fatura", 0.92), "m2": ("Bülten", 0.70), "m3": ("Müşteri", 0.85)}
+CATEGORY_OF = {"m1": ("Fatura", 0.92), "m2": ("Bülten", 0.70), "m3": ("Kişisel", 0.85), "m4": ("Hesap", 0.60)}
+YES_FOR = {config.ACIL_Q: "m3", config.OLTALAMA_Q: "m4"}  # any other yes/no question: m3
 
 
 class FakeGmail:
@@ -47,13 +49,13 @@ class FakeGmail:
 
 def fake_classify(settings, content, question, options):
     keys = [o["key"] for o in options]
+    mid = next(k for k, m in MAILS.items() if m["subject"] in content)
     if question == config.CATEGORY_QUESTION:
-        mid = next(k for k, m in MAILS.items() if m["subject"] in content)
         top, p = CATEGORY_OF[mid]
         rest = (1 - p) / (len(keys) - 1)
-        return classifier.Result({k: (p if k == top else rest) for k in keys}, "d3:9b", 800)
-    yes = 0.9 if "Sipariş" in content else 0.1  # only m3 counts as urgent
-    return classifier.Result({keys[0]: yes, keys[1]: 1 - yes}, "d3:9b", 600)
+        return classifier.Result({k: (p if k == top else rest) for k in keys}, "tev1:4b", 800)
+    yes = 0.9 if mid == YES_FOR.get(question, "m3") else 0.1
+    return classifier.Result({keys[0]: yes, keys[1]: 1 - yes}, "tev1:4b", 600)
 
 
 class SmokeTest(unittest.TestCase):
@@ -99,59 +101,75 @@ class SmokeTest(unittest.TestCase):
         config.update({"dryRun": False})
         engine.scan()
 
-        # m1 Fatura 0.92 ≥ 0.80 apply → applied; m2 Bülten 0.70 < 0.75 → queue; m3 Müşteri approve → queue, and Acil approve → queue.
+        # m1 Fatura 0.92 ≥ 0.85 → label only; m2 Bülten 0.70 < 0.90 → queue; m3 Kişisel → Acil yes 0.9 ≥ 0.85
+        # → star; m4 Hesap 0.60 < 0.85 → queue, and Oltalama is always sent for approval.
         acts = {(r["email_id"], r["source"]): r["status"] for r in db.rows(
             "SELECT a.email_id, d.source, a.status FROM actions a JOIN decisions d ON d.id = a.decision_id")}
         self.assertEqual(acts, {
-            ("m1", "Faturaları ayır"): "applied",
-            ("m2", "Bültenleri arşivle"): "pending",
-            ("m3", "Müşteri talepleri"): "pending",
-            ("m3", "Acil iş e-postaları"): "pending",
+            ("m1", "Faturalar"): "applied",
+            ("m2", "Bültenler"): "pending",
+            ("m3", "Acil / yanıt bekliyor"): "applied",
+            ("m4", "Hesap bildirimleri"): "pending",
+            ("m4", "Oltalama şüphesi"): "pending",
         })
-        self.assertNotIn("INBOX", self.g.labels["m1"])
-        self.assertIn("L:Fatura", self.g.labels["m1"])
+        self.assertEqual(self.g.labels["m1"], ["INBOX", "L:Fatura", "L:İşlendi", "UNREAD"])  # Fatura is not archived
+        self.assertIn("STARRED", self.g.labels["m3"])
 
         st = c.get("/api/status").json()
         self.assertTrue(st["gmail"]["connected"])
         self.assertEqual(st["pendingCount"], 3)
         today = c.get("/api/stats/today").json()
-        self.assertEqual((today["received"], today["processed"], today["pending"]), (3, 1, 3))
+        self.assertEqual((today["received"], today["processed"], today["pending"]), (4, 2, 3))
         cats = {i["category"]: i["count"] for i in c.get("/api/stats/categories").json()["items"]}
-        self.assertEqual((cats["Fatura"], cats["Bülten"], cats["Müşteri"], cats["Spam"]), (1, 1, 1, 0))
+        self.assertEqual(set(cats), set(config.CATEGORY_KEYS))
+        self.assertEqual((cats["Fatura"], cats["Hesap"], cats["Tanıtım"]), (1, 1, 0))
 
-        queue = c.get("/api/queue").json()
+        queue = {q["source"]: q for q in c.get("/api/queue").json()}
         self.assertEqual(len(queue), 3)
-        acil = next(q for q in queue if q["source"] == "Acil iş e-postaları")
-        self.assertEqual(acil["category"], "Acil")
-        self.assertEqual(acil["scores"][0]["key"], "Evet")
+        olta = queue["Oltalama şüphesi"]
+        self.assertEqual((olta["kind"], olta["category"], olta["scores"][0]["key"]), ("question", "Hesap", "Evet"))
+        self.assertEqual(queue["Hesap bildirimleri"]["kind"], "category")
 
-        bulten = next(q for q in queue if q["source"] == "Bültenleri arşivle")
-        self.assertEqual(c.post(f"/api/queue/{bulten['id']}/approve", json={}).json()["status"], "applied")
+        self.assertEqual(c.post(f"/api/queue/{queue['Bültenler']['id']}/approve", json={}).json()["status"], "applied")
         self.assertNotIn("INBOX", self.g.labels["m2"])
-        self.assertEqual(c.post(f"/api/queue/{acil['id']}/reject").json()["status"], "rejected")
+        self.assertEqual(c.post(f"/api/queue/{olta['id']}/reject").json()["status"], "rejected")
+
+        # Correcting the category takes that category rule's actions and fixes the e-mail's category.
+        hesap = queue["Hesap bildirimleri"]["id"]
+        self.assertEqual(c.post(f"/api/queue/{hesap}/approve", json={"category": "Müşteri"}).status_code, 422)
+        self.assertEqual(c.post(f"/api/queue/{hesap}/approve", json={"category": "Tanıtım"}).json()["status"], "applied")
+        self.assertIn("L:Tanıtım", self.g.labels["m4"])
+        self.assertNotIn("INBOX", self.g.labels["m4"])
+        self.assertEqual(db.one("SELECT category FROM emails WHERE id = 'm4'")["category"], "Tanıtım")
 
         # Undo restores exactly the earlier labels, redo puts the change back.
         logs = c.get("/api/actions", params={"range": "today"}).json()
-        fatura = next(l for l in logs if l["source"] == "Faturaları ayır")
+        fatura = next(l for l in logs if l["source"] == "Faturalar")
         self.assertTrue(fatura["canUndo"])
         c.post("/api/actions/undo", json={"ids": [fatura["id"]]})
         self.assertEqual(self.g.labels["m1"], ["INBOX", "UNREAD"])
         c.post("/api/actions/redo", json={"ids": [fatura["id"]]})
-        self.assertNotIn("INBOX", self.g.labels["m1"])
+        self.assertIn("L:Fatura", self.g.labels["m1"])
 
         csv = c.get("/api/actions.csv", params={"range": "today"})
-        self.assertIn("Faturaları ayır", csv.content.decode("utf-8-sig"))
+        self.assertIn("Faturalar", csv.content.decode("utf-8-sig"))
 
         rules = {r["name"]: r for r in c.get("/api/rules").json()}
-        self.assertEqual(rules["Faturaları ayır"]["stats7d"], {"triggered": 1, "undone": 0})
-        self.assertFalse(rules["Ödenmemiş faturalar"]["enabled"])
+        self.assertEqual(rules["Faturalar"]["stats7d"], {"triggered": 1, "undone": 0})
+        self.assertEqual((rules["Acil / yanıt bekliyor"]["kind"], rules["Acil / yanıt bekliyor"]["category"]), ("question", "Kişisel"))
+        self.assertTrue(rules["Oltalama şüphesi"]["modeLocked"])
+
+    def test_categories_come_from_the_backend(self):
+        cats = self.client.get("/api/categories").json()
+        self.assertEqual([c["key"] for c in cats], ["Banka", "Fatura", "Alışveriş", "Hesap", "Kişisel", "Bülten", "Tanıtım", "Diğer"])
+        self.assertIn("tanıtım değildir", next(c for c in cats if c["key"] == "Tanıtım")["description"])
 
     def test_dry_run_never_touches_gmail(self):
         engine.scan()  # dryRun defaults to True
         self.assertEqual(self.g.labels["m1"], ["INBOX", "UNREAD"])
-        st = db.one("SELECT a.status FROM actions a JOIN decisions d ON d.id = a.decision_id WHERE d.source = 'Faturaları ayır'")
+        st = db.one("SELECT a.status FROM actions a JOIN decisions d ON d.id = a.decision_id WHERE d.source = 'Faturalar'")
         self.assertEqual(st["status"], "suggested")
-        pending = self.client.get("/api/queue").json()[0]
+        pending = next(q for q in self.client.get("/api/queue").json() if q["source"] == "Bültenler")
         self.assertEqual(self.client.post(f"/api/queue/{pending['id']}/approve", json={}).json()["status"], "suggested")
         self.assertEqual(self.g.labels["m2"], ["INBOX", "UNREAD"])
 
@@ -160,7 +178,7 @@ class SmokeTest(unittest.TestCase):
             raise classifier.ModelError("Ollama'ya ulaşılamıyor")
         with mock.patch.object(classifier, "classify", down):
             engine.scan()
-        self.assertEqual(self.client.get("/api/status").json()["waiting"], 3)
+        self.assertEqual(self.client.get("/api/status").json()["waiting"], 4)
         engine.scan()  # model back
         self.assertEqual(self.client.get("/api/status").json()["waiting"], 0)
 
@@ -172,11 +190,11 @@ class SmokeTest(unittest.TestCase):
         with mock.patch.object(classifier, "classify", category_only):
             engine.scan()
         self.assertEqual(db.one("SELECT COUNT(*) AS n FROM decisions")["n"], 0)
-        self.assertEqual(db.one("SELECT COUNT(*) AS n FROM emails WHERE processed_at IS NULL")["n"], 3)
+        self.assertEqual(db.one("SELECT COUNT(*) AS n FROM emails WHERE processed_at IS NULL")["n"], 4)
         engine.scan()
         engine.scan()
         n = db.one("SELECT COUNT(*) AS n, COUNT(DISTINCT email_id || source) AS u FROM decisions")
-        self.assertEqual((n["n"], n["u"]), (4, 4))
+        self.assertEqual((n["n"], n["u"]), (5, 5))
         self.assertEqual(db.one("SELECT COUNT(*) AS n FROM emails WHERE processed_at IS NULL")["n"], 0)
 
     def test_rules_crud_and_validation(self):
@@ -190,6 +208,23 @@ class SmokeTest(unittest.TestCase):
         c.delete(f"/api/rules/{rid}")
         self.assertNotIn(rid, [x["id"] for x in c.get("/api/rules").json()])
 
+        # A yes/no question limited to one category, and a plain category rule.
+        base = {"threshold": 0.85, "actions": ["star"], "mode": "apply"}
+        r = c.post("/api/rules", json={**base, "name": "Toplantı", "category": "Kişisel", "kind": "question", "question": "Toplantı daveti mi?"}).json()
+        self.assertEqual((r["kind"], r["category"], r["options"][0]["key"]), ("question", "Kişisel", "Evet"))
+        r = c.post("/api/rules", json={**base, "name": "Banka 2", "category": "Banka", "question": "Banka"}).json()
+        self.assertEqual((r["kind"], r["options"]), ("category", []))
+        self.assertEqual(c.post("/api/rules", json={**base, "name": "X", "kind": "category", "question": "abc"}).status_code, 422)
+
+        # Security mail is never archived; Oltalama always waits for approval.
+        hesap = c.post("/api/rules", json={**base, "name": "H", "category": "Hesap", "question": "abc", "actions": ["archive"]})
+        self.assertEqual(hesap.status_code, 422)
+        rules = {x["name"]: x for x in c.get("/api/rules").json()}
+        self.assertEqual(c.patch(f"/api/rules/{rules['Hesap bildirimleri']['id']}", json={"actions": ["label:Hesap", "archive"]}).status_code, 422)
+        olta = rules["Oltalama şüphesi"]["id"]
+        self.assertEqual(c.patch(f"/api/rules/{olta}", json={"mode": "apply"}).status_code, 422)
+        self.assertEqual(c.patch(f"/api/rules/{olta}", json={"threshold": 0.95}).status_code, 200)
+
     def test_task_run(self):
         config.update({"dryRun": False})
         t = {"query": "in:inbox", "question": "Bu e-posta bir sipariş şikâyeti mi?", "threshold": 0.8,
@@ -198,9 +233,38 @@ class SmokeTest(unittest.TestCase):
         with mock.patch.object(engine, "start_task", lambda tid: engine._run_task(tid, engine.threading.Event())):
             tid = self.client.post("/api/tasks", json=t).json()["id"]
         task = self.client.get("/api/tasks").json()[0]
-        self.assertEqual((task["id"], task["status"], task["processed"], task["passed"]), (tid, "done", 3, 1))
+        self.assertEqual((task["id"], task["status"], task["processed"], task["passed"]), (tid, "done", 4, 1))
         self.assertIn("L:Şikayet", self.g.labels["m3"])
-        self.assertEqual(len(self.client.get(f"/api/tasks/{tid}/scores").json()["scores"]), 3)
+        self.assertEqual(len(self.client.get(f"/api/tasks/{tid}/scores").json()["scores"]), 4)
+
+    def test_migration_from_v1(self):
+        # Turn the fresh database back into a v1 one: old starter rules plus two rules the user made.
+        with db.tx() as con:
+            con.execute("DELETE FROM rules")
+            con.execute("ALTER TABLE rules DROP COLUMN mode_locked")
+            rows = [(n, c, q, t, a, m) for n, c, q, t, a, m in migrate.V1_STARTERS if n != "Faturaları ayır"]
+            rows += [("Faturaları ayır", "Fatura", "Bu e-posta bir fatura veya ödeme bildirimi mi?", 0.70, ["label:Fatura"], "apply"),  # edited
+                     ("Kurumsal müşteri", "Müşteri", "Kurumsal müşteriden mi?", 0.80, ["label:Kurumsal"], "approve")]       # own rule
+            for n, c, q, t, a, m in rows:
+                con.execute("INSERT INTO rules(name, category, question, options, threshold, actions, mode, enabled, created_at) "
+                            "VALUES(?, ?, ?, ?, ?, ?, ?, 1, ?)", (n, c, q, db.j([] if c else config.yes_no(q)), t, db.j(a), m, db.now()))
+            con.execute("PRAGMA user_version = 1")
+
+        migrate.run()
+        self.assertEqual(db.version(), db.SCHEMA_VERSION)
+        rules = {r["name"]: r for r in self.client.get("/api/rules").json()}
+        # Untouched v1 starters are gone; the edited Fatura rule stays and no second Fatura rule is added.
+        self.assertFalse({"Müşteri talepleri", "Bültenleri arşivle", "Spam temizliği", "Acil iş e-postaları", "Ödenmemiş faturalar"} & set(rules))
+        self.assertEqual(rules["Faturaları ayır"]["threshold"], 0.70)
+        self.assertNotIn("Faturalar", rules)
+        # A rule whose category is gone becomes a disabled yes/no rule with its own question.
+        k = rules["Kurumsal müşteri"]
+        self.assertEqual((k["kind"], k["category"], k["enabled"], k["options"][0]["key"]), ("question", None, False, "Evet"))
+        new = {n for n, *_ in config.STARTER_RULES} - {"Faturalar"}
+        self.assertTrue(new <= set(rules))
+        self.assertTrue(rules["Oltalama şüphesi"]["modeLocked"])
+        migrate.run()  # already current: nothing changes
+        self.assertEqual(len(self.client.get("/api/rules").json()), len(rules))
 
     def test_settings_validation(self):
         c = self.client
