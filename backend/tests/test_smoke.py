@@ -5,6 +5,7 @@ Run from backend/: .venv\\Scripts\\python -m unittest discover -s tests -v
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import tempfile
 import unittest
@@ -358,6 +359,32 @@ class SmokeTest(unittest.TestCase):
             config.update({"model": "tev1:1b"})  # selected but not installed: still listed, flagged
             self.assertEqual(self.client.get("/api/models").json()[0], {"name": "tev1:1b", "installed": False, "kind": "decision"})
             self.assertEqual(self.client.post("/api/settings/test-ollama", json={}).json()["decision"], ["tev1:4b", "d3:9b"])
+
+    def test_oauth_accepts_extra_scopes_and_rejects_missing_ones(self):
+        from oauthlib.oauth2.rfc6749.parameters import parse_token_response
+        g = "https://www.googleapis.com/auth/"
+        # The same client was granted gmail.readonly earlier, so Google returns three scopes for two asked.
+        body = json.dumps({"access_token": "t", "token_type": "Bearer", "expires_in": 3600,
+                           "scope": f"{g}gmail.modify {g}gmail.labels {g}gmail.readonly"})
+        with mock.patch.dict("os.environ"):
+            os.environ.pop("OAUTHLIB_RELAX_TOKEN_SCOPE", None)
+            with self.assertRaisesRegex(Warning, "Scope has changed"):  # the error users saw
+                parse_token_response(body, scope=gmail.SCOPES)
+        parse_token_response(body, scope=gmail.SCOPES)  # app.gmail relaxes the check: no error
+
+        def finish(granted):
+            flow = mock.Mock(credentials=mock.Mock(scopes=gmail.SCOPES, granted_scopes=granted))
+            gmail._flows["st"] = flow
+            svc = mock.Mock()
+            svc.users.return_value.getProfile.return_value.execute.return_value = {"emailAddress": "veli@gmail.com"}
+            with mock.patch.object(gmail, "build", lambda *a, **k: svc), mock.patch.object(gmail, "_store", lambda e, c: None):
+                return gmail.finish_flow("st", "code")
+
+        self.assertEqual(finish([*gmail.SCOPES, f"{g}gmail.readonly"]), "veli@gmail.com")
+        scopes = db.one("SELECT scopes FROM accounts WHERE email = 'veli@gmail.com'")["scopes"]
+        self.assertEqual(db.unj(scopes), ["gmail.modify", "gmail.labels", "gmail.readonly"])  # what Google really granted
+        with self.assertRaisesRegex(ValueError, "gmail.labels"):  # a box left unticked on the consent screen
+            finish([f"{g}gmail.modify"])
 
     def test_settings_validation(self):
         c = self.client

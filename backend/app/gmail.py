@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import threading
 from datetime import datetime, timezone
 from typing import Any
@@ -26,6 +27,11 @@ KEYRING_SERVICE = "MailKarar"
 LABEL_ROOT = "MailKarar"
 PROCESSED_LABEL = f"{LABEL_ROOT}/İşlendi"
 RETRIES = 5  # googleapiclient backs off on 429 and 5xx between these
+
+# Google may grant more scopes than asked (ones the same OAuth client got earlier, e.g. gmail.readonly
+# from tools/model-tests) or fewer (the user unticks one on the consent screen). oauthlib then raises
+# 'Scope has changed from "…" to "…"'. Accept the token and check the required scopes in finish_flow.
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 
 
 class AuthExpired(Exception):
@@ -80,7 +86,7 @@ def start_flow(redirect_uri: str) -> str:
         raise ValueError("Önce credentials.json yükleyin.")
     cfg = json.loads(CRED_PATH.read_text(encoding="utf-8"))
     flow = Flow.from_client_config(cfg, scopes=SCOPES, redirect_uri=redirect_uri, autogenerate_code_verifier=True)
-    url, state = flow.authorization_url(access_type="offline", prompt="consent", include_granted_scopes="true")
+    url, state = flow.authorization_url(access_type="offline", prompt="consent")
     with _flows_lock:
         _flows[state] = flow
     return url
@@ -93,10 +99,15 @@ def finish_flow(state: str, code: str) -> str:
         raise ValueError("Yetkilendirme oturumu bulunamadı ya da süresi doldu. Yeniden deneyin.")
     flow.fetch_token(code=code)
     creds = flow.credentials
+    granted_full = list(creds.granted_scopes or creds.scopes or [])
+    missing = [s.rsplit("/", 1)[-1] for s in SCOPES if s not in granted_full]
+    if missing:
+        raise ValueError(f"Google onay ekranında gerekli izinler verilmedi: {', '.join(missing)}. "
+                         "Yeniden bağlanıp tüm kutuları işaretleyin.")
     svc = build("gmail", "v1", credentials=creds, cache_discovery=False)
     email = svc.users().getProfile(userId="me").execute()["emailAddress"]
     _store(email, creds)
-    granted = [s.rsplit("/", 1)[-1] for s in (creds.scopes or SCOPES)]
+    granted = [s.rsplit("/", 1)[-1] for s in granted_full]
     with db.tx() as con:
         con.execute(
             "INSERT INTO accounts(email, status, scopes, created_at) VALUES(?, 'ok', ?, ?) "
