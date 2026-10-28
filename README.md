@@ -112,7 +112,7 @@ Testler (Gmail ve model taklit edilerek): `cd backend; .\.venv\Scripts\python -m
 
 ## Henüz doğrulanmayanlar
 
-- Gerçek bir Gmail hesabıyla OAuth akışı ve etiket yazma henüz denenmedi.
+- Gerçek Gmail hesabıyla OAuth bağlantısı ve okuma çalışıyor; etiket yazma, arşivleme ve geri alma henüz denenmedi.
 - Bülten ile Tanıtım ayrımı gerçek e-postalarda henüz doğrulanmadı.
 - Yeni sekiz kategorili choice sorusunun gerçek e-postalardaki doğruluğu ölçülmedi. Doğruluk sonuçları
   (bkz. CLAUDE.md) kural başına evet/hayır sorularıyla yapılan v2 testinden; ilk turdaki choice sorusu

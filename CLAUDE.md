@@ -15,7 +15,9 @@ cd frontend; npm run build      # tsc + vite; tür hatası derlemeyi durdurur
 Backend testleri Gmail'i ve modeli taklit eder. `ClassifierTest`, Ollama 0.40.11'in gerçek
 `/v1/systemone` yanıt biçimlerini sahte bir sunucuya karşı sınar: yanıt biçimi değişirse önce gerçek
 bir istekle doğrulayın, sonra testi güncelleyin. Arayüz değişikliğinde sayfayı geçici bir veritabanıyla
-açıp bakın; asıl `backend/data/mailkarar.db` dosyasını deneme için kullanmayın.
+açıp bakın: boş bir klasörde `db.init()` ile yeni veritabanı açıp uydurma veri ekleyin. Asıl
+`backend/data/mailkarar.db` dosyasını ve kopyasını kullanmayın; bağlı Gmail hesabının gerçek
+e-postalarını içerir. Kullanıcının uygulaması 8000 portunda çalışıyor olabilir; denemeler için başka port seçin.
 
 ## Güvenlik ve varsayılanlar
 
@@ -94,3 +96,23 @@ Git'e girmez, içeriği okunmaz ya da değiştirilmez:
   satırı: ikisi de bu makinede yaşanmış hataları düzeltir.
 
 Push etmeden önce kullanıcıya gösterin; git geçmişini yeniden yazmayın.
+
+## Açık işler
+
+Sıradaki adım: gerçek e-postalarla **kuru modda gözlem**. Gmail hesabı bağlı ve okuma çalışıyor; tüm
+kurallar hâlâ kuru. Onay Kuyruğu'ndaki kararlara bakıp kategori açıklamalarını ve eşikleri ayarlayın,
+sonra kuralları tek tek kuru moddan çıkarın.
+
+Doğrulanmayı bekleyenler:
+- Sekiz kategorili choice sorusunun gerçek e-posta doğruluğu (özellikle Bülten ile Tanıtım ayrımı).
+- Gmail'e yazma ve geri alma (`gmail.apply_ops`, `gmail.revert`): ilk kural kuru moddan çıkınca
+  `MailKarar/…` etiketlerini, arşivi ve 30 günlük geri almayı gerçek hesapta deneyin.
+
+Bilinen kusurlar:
+- Sunucu açıldıktan sonraki ilk `/api/status` çağrısı ~2 sn sürüyor (nedeni doğrulanmadı). Kullanıcı
+  şimdilik dokunulmamasını istedi; ön yüz bu sürede "Bağlanıyor…" gösteriyor.
+- İki uçlu eşik kaydırıcısı tutamacı fare gezinmesine göre seçer; dokunmatik ekranda ilk dokunuş
+  üstteki tutamacı tutabilir. Gerçek bir sürüklemeyle test edilmedi.
+- Evet/hayır kuralları her e-posta için bir karar kaydı bırakır (eşik altındakiler dahil); `decisions`
+  tablosu için temizleme yok.
+- Testlerde `StarletteDeprecationWarning` (TestClient için `httpx2` öneriyor); sonuçları etkilemiyor.
