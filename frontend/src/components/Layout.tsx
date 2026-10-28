@@ -17,7 +17,7 @@ export function Nav({ current }: { current: Screen }) {
   const { go, status } = useApp()
   const pending = status?.pendingCount ?? 0
   return (
-    <nav aria-label="Ana menü" style={{ flex: '1 1 220px', background: 'var(--card)', borderRight: '1px solid var(--line)', padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <nav aria-label="Ana menü" className="shell-nav" style={{ background: 'var(--card)', borderRight: '1px solid var(--line)', padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '4px 10px 16px' }}>
         <div aria-hidden="true" style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--btn)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Ic.Mail /></div>
         <span style={{ fontWeight: 600, fontSize: 14, letterSpacing: '-0.01em' }}>MailKarar</span>

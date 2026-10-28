@@ -124,7 +124,7 @@ export default function Panel() {
         </section>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+      <div className="kpis">
         <Kpi label="Bugün gelen" value={stats?.received}
           sub={stats && <><span style={{ color: 'var(--tx)', fontWeight: 500 }}>{diff > 0 ? `↑ ${diff}` : diff < 0 ? `↓ ${-diff}` : '='}</span> {diff > 0 ? 'dünden fazla' : diff < 0 ? 'dünden az' : 'dünle aynı'} ({stats.yesterdayReceived}) · 7 günde {stats.weekReceived}</>} />
         <Kpi label="İşlenen" dot="var(--gn)" value={stats?.processed}
@@ -135,15 +135,15 @@ export default function Panel() {
         <Kpi label="Hata" dot="var(--rd)" color="var(--rd)" value={stats?.errors} sub={stats && (stats.lastError ?? 'Bugün hata yok')} />
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
-        <section className="card" style={{ flex: '2 1 560px', minWidth: 0, overflow: 'hidden' }}>
+      <div className="split-2-1">
+        <section className="card" style={{ minWidth: 0, overflow: 'hidden' }}>
           <div className="sec-head">
             <h2 className="h2">İşlem bekleyen e-postalar</h2>
             <span className="num count">{status?.pendingCount ?? 0}</span>
             <a href="#/queue" style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 500 }}>Tümünü gör</a>
           </div>
           <div style={{ display: 'flex', gap: 16, padding: '6px 16px', borderTop: '1px solid var(--line)', background: 'var(--sub)', fontSize: 11, fontWeight: 500, color: 'var(--mut)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            <span style={{ flex: '1 1 260px' }}>Gönderen / konu</span>
+            <span style={{ flex: '1 1 200px' }}>Gönderen / konu</span>
             <span style={{ flex: '0 0 150px' }}>Kategori · güven</span>
             <span style={{ flex: '0 0 170px' }}>Önerilen işlem</span>
             <span style={{ flex: '0 0 130px', textAlign: 'right' }}>Karar</span>
@@ -161,7 +161,7 @@ export default function Panel() {
             const st = decided[it.id]
             return (
               <div key={it.id} className="row" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 16px', padding: '11px 16px', borderTop: '1px solid var(--line)' }}>
-                <div style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', gap: 10, alignItems: 'center' }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0, display: 'flex', gap: 10, alignItems: 'center' }}>
                   <div aria-hidden="true" style={{ flex: 'none', width: 30, height: 30, borderRadius: '50%', background: 'var(--sub)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--mut)' }}>{initials(it.from)}</div>
                   <div style={{ minWidth: 0 }}>
                     <div className="ellipsis" style={{ fontWeight: 500 }}>{it.from} <span className="num" style={{ color: 'var(--mut)', fontWeight: 400 }}>· {shortTime(it.receivedAt)}</span></div>
@@ -192,7 +192,7 @@ export default function Panel() {
           })}
         </section>
 
-        <section className="card" style={{ flex: '1 1 300px', minWidth: 0, padding: '14px 16px 16px' }}>
+        <section className="card" style={{ minWidth: 0, padding: '14px 16px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
             <h2 className="h2">Kategori dağılımı</h2>
             <span style={{ fontSize: 12, color: 'var(--mut)' }}>7 gün</span>

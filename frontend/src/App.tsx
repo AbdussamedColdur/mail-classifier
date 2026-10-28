@@ -64,12 +64,12 @@ export default function App() {
 
   return (
     <Ctx.Provider value={{ status, statusFailed, refreshStatus, dark, toggleTheme: () => setDark((d) => !d), go, toast: showToast }}>
-      <div className={dark ? 'mk dk' : 'mk'} style={{ display: 'flex', flexWrap: 'wrap', minHeight: '100vh', background: 'var(--bg)' }}>
+      <div className={dark ? 'mk dk shell' : 'mk shell'}>
         <Nav current={route.screen} />
-        <main style={{ flex: '999 1 560px', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <main className="shell-main">
           {status?.dryRun && <DryBand />}
           <StatusBar />
-          <div key={route.screen}>{pages[route.screen]}</div>
+          <div key={route.screen} className="screen">{pages[route.screen]}</div>
         </main>
         {toast && (
           <Toast title={toast.title} sub={toast.sub} onClose={() => setToast(null)}

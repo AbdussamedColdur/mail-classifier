@@ -43,7 +43,64 @@ body.dk { background: #0C0C0E; }
 
 /* Recurring pieces, kept to the exact sizes used in the design. */
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
-.page { padding: 24px; display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1360px; }
+
+/* Shell: fixed side menu, and a main column as tall as the window. The status bar stays put and
+   each screen scrolls inside .screen; a .page.fill screen (the queue) scrolls its own parts instead. */
+.shell { display: flex; height: 100vh; background: var(--bg); }
+.shell-nav { flex: 0 0 220px; overflow-y: auto; }
+.shell-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.page { padding: 24px; display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 2400px; margin: 0 auto; flex: 1 0 auto; }
+.page.fill { flex: 1 1 0; min-height: 0; }
+@media (max-width: 720px) {
+  .shell { flex-direction: column; height: auto; min-height: 100vh; }
+  .shell-nav { flex: none; }
+  .screen { overflow: visible; }
+}
+
+/* Width rules shared by the screens. */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.split-2-1 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
+/* Forms stay readable at ≤960px; the side column takes the rest of the width. */
+.split-form { display: grid; grid-template-columns: minmax(0, 960px) minmax(280px, 1fr); gap: 16px; align-items: start; }
+.split-form > .side { position: sticky; top: 0; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (max-width: 1100px) {
+  .split-2-1, .split-form { grid-template-columns: minmax(0, 1fr); }
+  .split-form > .side { position: static; order: -1; }
+}
+@media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Full-width tables: fixed layout, one flexible text column, the rest fixed and cut with "…". */
+.ftable { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+.ftable td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ftable th { position: sticky; top: 0; z-index: 1; overflow: hidden; text-overflow: ellipsis; }
+
+/* Approval queue: table and detail side by side, each scrolling vertically on its own. */
+.q-body { flex: 1 1 auto; min-height: 0; display: flex; gap: 16px; }
+.q-table { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; }
+.q-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.q-detail { flex: 0 0 420px; min-height: 0; overflow-y: auto; }
+.q-backdrop { display: none; }
+.q-table .c-sel { width: 40px; } .q-table .c-from { width: 180px; } .q-table .c-cat { width: 104px; }
+.q-table .c-score { width: 116px; } .q-table .c-ops { width: 220px; } .q-table .c-status { width: 104px; }
+.q-table .c-time { width: 108px; }
+@container (max-width: 820px) {
+  .q-table .c-ops, .q-table .c-bar { display: none; }
+  .q-table .c-from { width: 130px; } .q-table .c-score { width: 70px; } .q-table .c-cat { width: 96px; }
+}
+@container (max-width: 620px) { .q-table .c-status { display: none; } }
+@media (max-width: 1279px) {
+  .q-detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); z-index: 30;
+    border-radius: 0; border-width: 0 0 0 1px; box-shadow: -12px 0 32px rgba(0,0,0,0.18); }
+  .q-backdrop { display: block; position: fixed; inset: 0; z-index: 29; padding: 0; border: 0; background: rgba(0,0,0,0.25); }
+}
+
+/* Logs table columns; the e-mail column takes the rest. */
+.l-table { container-type: inline-size; }
+.l-table .c-sel { width: 40px; } .l-table .c-time { width: 120px; } .l-table .c-rule { width: 190px; }
+.l-table .c-score { width: 64px; } .l-table .c-ops { width: 210px; } .l-table .c-status { width: 120px; }
+.l-table .c-act { width: 100px; }
+@container (max-width: 860px) { .l-table .c-ops { display: none; } .l-table .c-rule { width: 140px; } }
 .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .page-head h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
 .page-head p { margin: 2px 0 0; color: var(--mut); }

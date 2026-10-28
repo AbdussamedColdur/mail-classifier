@@ -70,22 +70,14 @@ export default function Settings() {
   }[test.state] as [string, string]
 
   return (
-    <div className="page" style={{ gap: 16, maxWidth: 980 }}>
+    <div className="page" style={{ gap: 16 }}>
       <div>
         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.015em' }}>Ayarlar</h1>
         <p style={{ margin: '2px 0 0', color: 'var(--mut)' }}>Tüm ayarlar bu cihazda saklanır.</p>
       </div>
 
-      <section aria-labelledby="h-dry" className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 20px', padding: '16px 18px', borderColor: dry ? 'var(--line2)' : 'var(--line)' }}>
-        <div style={{ flex: '1 1 380px', minWidth: 0 }}>
-          <h2 id="h-dry" className="h2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Genel kuru mod
-            <span className="badge" style={{ background: dry ? 'var(--gyBg)' : 'var(--gnBg)', color: dry ? 'var(--gy)' : 'var(--gn)' }}>{dry ? 'Açık' : 'Kapalı — işlemler uygulanıyor'}</span>
-          </h2>
-          <p style={{ margin: '4px 0 0', color: 'var(--mut)' }}>Açıkken model kararlarını vermeye ve kaydetmeye devam eder, ama hiçbir etiket, arşiv ya da yıldız Gmail'e yazılmaz. Onay düğmeleri “Uygula” yerine “Öner” olur. Yeni kuralları denerken açık tutun. Anahtar kaydetmeyi beklemez; tüm ekranlara hemen uygulanır.</p>
-        </div>
-        <Switch big on={dry} label="Genel kuru mod" track="var(--gy)" onClick={toggleDry} />
-      </section>
-
+      <div className="split-form">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
       <section aria-labelledby="h-model" className="card">
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}><h2 id="h-model" className="h2">Karar modeli</h2></div>
         <Row title="Model" hint="Ollama'da yüklü modeller. “Karar modeli” işaretliler (d3, tev1) önerilir; diğerleri yedek yöntemle (sohbet + JSON puan) çalışır.">
@@ -144,11 +136,26 @@ export default function Settings() {
           </div>
         </Row>
       </section>
+      </div>
 
-      <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, color: dirty ? 'var(--am)' : 'var(--mut)' }}><span aria-hidden="true" className="dot" style={{ background: dirty ? 'var(--am)' : 'var(--mut)' }} />{dirty ? 'Kaydedilmemiş değişiklikler var' : 'Tüm değişiklikler kaydedildi'}</span>
-        <button className="btn ib" type="button" onClick={() => setForm(saved)} disabled={!dirty} style={{ marginLeft: 'auto' }}>Vazgeç</button>
-        <button type="button" className="btn-p" onClick={save} disabled={!dirty || saving} style={{ padding: '0 16px' }}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</button>
+      {/* Side column: the dry-mode switch and the save bar stay in view next to the forms. */}
+      <div className="side">
+        <section aria-labelledby="h-dry" className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 20px', padding: '16px 18px', borderColor: dry ? 'var(--line2)' : 'var(--line)' }}>
+          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+            <h2 id="h-dry" className="h2" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>Genel kuru mod
+              <span className="badge" style={{ background: dry ? 'var(--gyBg)' : 'var(--gnBg)', color: dry ? 'var(--gy)' : 'var(--gn)' }}>{dry ? 'Açık' : 'Kapalı — işlemler uygulanıyor'}</span>
+            </h2>
+            <p style={{ margin: '4px 0 0', color: 'var(--mut)' }}>Açıkken model kararlarını vermeye ve kaydetmeye devam eder, ama hiçbir etiket, arşiv ya da yıldız Gmail'e yazılmaz. Onay düğmeleri “Uygula” yerine “Öner” olur. Yeni kuralları denerken açık tutun. Anahtar kaydetmeyi beklemez; tüm ekranlara hemen uygulanır.</p>
+          </div>
+          <Switch big on={dry} label="Genel kuru mod" track="var(--gy)" onClick={toggleDry} />
+        </section>
+
+        <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, color: dirty ? 'var(--am)' : 'var(--mut)' }}><span aria-hidden="true" className="dot" style={{ background: dirty ? 'var(--am)' : 'var(--mut)' }} />{dirty ? 'Kaydedilmemiş değişiklikler var' : 'Tüm değişiklikler kaydedildi'}</span>
+          <button className="btn ib" type="button" onClick={() => setForm(saved)} disabled={!dirty} style={{ marginLeft: 'auto' }}>Vazgeç</button>
+          <button type="button" className="btn-p" onClick={save} disabled={!dirty || saving} style={{ padding: '0 16px' }}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</button>
+        </div>
+      </div>
       </div>
     </div>
   )

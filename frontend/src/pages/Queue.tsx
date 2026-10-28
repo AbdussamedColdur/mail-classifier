@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api/client'
 import type { Action } from '../api/types'
 import { Bar } from '../components/Layout'
@@ -21,13 +21,26 @@ export default function Queue() {
   const [busy, setBusy] = useState(false)
   const dry = status?.dryRun ?? true
 
+  // Open the first pending decision once, and only where the detail sits beside the table; below
+  // 1280px it is a drawer over the table, and a closed panel must stay closed on the next poll.
+  const autoOpened = useRef(false)
   const load = usePoll(async () => {
     try {
       const data = await api.queue()
       setItems(data)
-      setSel((s) => (s === null && data.length ? data.find((a) => a.status === 'pending')?.id ?? null : s))
+      if (!autoOpened.current && data.length) {
+        autoOpened.current = true
+        if (window.matchMedia('(min-width: 1280px)').matches) setSel(data.find((a) => a.status === 'pending')?.id ?? null)
+      }
     } catch { /* shown by the status bar */ }
   }, 15000)
+
+  useEffect(() => {
+    if (sel === null) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSel(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [sel])
 
   const shown = useMemo(() => {
     const needle = q.trim().toLocaleLowerCase('tr-TR')
@@ -51,7 +64,7 @@ export default function Queue() {
   const pendingCount = items?.filter((a) => a.status === 'pending').length ?? 0
 
   return (
-    <div className="page" style={{ gap: 16 }}>
+    <div className="page fill" style={{ gap: 16 }}>
       <div className="page-head">
         <div style={{ flex: '1 1 auto' }}>
           <h1>Onay Kuyruğu</h1>
@@ -92,35 +105,39 @@ export default function Queue() {
         </label>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
-        <section aria-label="Bekleyen kararlar" className="card" style={{ flex: '1 1 600px', minWidth: 0, overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', minWidth: 760, borderCollapse: 'collapse' }}>
-              <thead><tr><th style={{ width: 36 }}><span className="sr">Seç</span></th><th>Gönderen</th><th>Konu</th><th>Kategori</th><th>Güven</th><th>Önerilen işlem</th><th>Durum</th><th style={{ textAlign: 'right' }}>Saat</th></tr></thead>
+      <div className="q-body">
+        <section aria-label="Bekleyen kararlar" className="card q-table">
+          <div className="q-scroll">
+            <table className="ftable">
+              <thead><tr>
+                <th className="c-sel"><span className="sr">Seç</span></th><th className="c-from">Gönderen</th><th>Konu</th>
+                <th className="c-cat">Kategori</th><th className="c-score">Güven</th><th className="c-ops">Önerilen işlem</th>
+                <th className="c-status">Durum</th><th className="c-time" style={{ textAlign: 'right' }}>Saat</th>
+              </tr></thead>
               <tbody>
                 {shown.map((r) => {
                   const on = r.id === sel
                   const st = statusBadge(r.status)
                   const bg = on ? 'var(--accSoft)' : 'transparent'
+                  const ops = opsText(r.ops)
                   return (
                     <tr key={r.id} className="tr" onClick={() => { setSel(r.id); setNewCat('') }}>
-                      <td style={{ background: bg, boxShadow: on ? 'inset 2px 0 0 var(--acc)' : 'none' }} onClick={(e) => e.stopPropagation()}>
+                      <td className="c-sel" style={{ background: bg, boxShadow: on ? 'inset 2px 0 0 var(--acc)' : 'none' }} onClick={(e) => e.stopPropagation()}>
                         <input type="checkbox" aria-label={`${r.subject} kararını seç`} disabled={r.status !== 'pending'} checked={!!checked[r.id]}
                           onChange={() => setChecked((c) => ({ ...c, [r.id]: !c[r.id] }))} />
                       </td>
-                      <td className="ellipsis" style={{ background: bg, fontWeight: 500, maxWidth: 170 }}>{r.from}</td>
-                      <td style={{ background: bg, maxWidth: 280 }}><button type="button" onClick={() => setSel(r.id)} className="ellipsis" style={{ display: 'block', width: '100%', padding: 0, border: 0, background: 'transparent', textAlign: 'left' }}>{r.subject}</button></td>
-                      <td style={{ background: bg }}><span className="chip">{r.category}</span></td>
-                      <td style={{ background: bg }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Bar value={r.topScore} width={56} /><span className="num" style={{ fontSize: 12, fontWeight: 600 }}>{score(r.topScore)}</span></div></td>
-                      <td style={{ background: bg, fontSize: 12, whiteSpace: 'nowrap' }}>{opsText(r.ops)}</td>
-                      <td style={{ background: bg }}><span className="badge" style={{ background: st.bg, color: st.fg }}>{st.text}</span></td>
-                      <td className="num" style={{ background: bg, textAlign: 'right', color: 'var(--mut)', fontSize: 12, whiteSpace: 'nowrap' }}>{when(r.receivedAt)}</td>
+                      <td className="c-from" title={r.addr ? `${r.from} <${r.addr}>` : r.from} style={{ background: bg, fontWeight: 500 }}>{r.from}</td>
+                      <td title={r.subject} style={{ background: bg }}><button type="button" onClick={() => setSel(r.id)} className="ellipsis" style={{ display: 'block', width: '100%', padding: 0, border: 0, background: 'transparent', textAlign: 'left' }}>{r.subject}</button></td>
+                      <td className="c-cat" title={r.category} style={{ background: bg }}><span className="chip">{r.category}</span></td>
+                      <td className="c-score" style={{ background: bg }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span className="c-bar"><Bar value={r.topScore} width={48} /></span><span className="num" style={{ fontSize: 12, fontWeight: 600 }}>{score(r.topScore)}</span></div></td>
+                      <td className="c-ops" title={ops} style={{ background: bg, fontSize: 12 }}>{ops}</td>
+                      <td className="c-status" style={{ background: bg }}><span className="badge" style={{ background: st.bg, color: st.fg }}>{st.text}</span></td>
+                      <td className="c-time num" style={{ background: bg, textAlign: 'right', color: 'var(--mut)', fontSize: 12 }}>{when(r.receivedAt)}</td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
-          </div>
           {items && shown.length === 0 && (
             <div className="empty" style={{ padding: '48px 16px' }}>
               <div aria-hidden="true" className="empty-ic" style={{ width: 44, height: 44 }}><Ic.Check s={20} w={2.2} /></div>
@@ -131,10 +148,12 @@ export default function Queue() {
               <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, fontWeight: 500 }}><a href="#/logs">Son kararları gör</a><a href="#/rules">Kuralları düzenle</a></div>
             </div>
           )}
+          </div>
         </section>
 
+        {x && <button type="button" className="q-backdrop" aria-label="Ayrıntıyı kapat" onClick={() => setSel(null)} />}
         {x && (
-          <aside aria-label="E-posta ayrıntısı" className="card" style={{ flex: '0 1 380px', minWidth: 300, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}>
+          <aside aria-label="E-posta ayrıntısı" className="card q-detail" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
               <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--mut)' }}>Ayrıntı</span>
               <span className="badge" style={{ background: statusBadge(x.status).bg, color: statusBadge(x.status).fg }}>{statusBadge(x.status).text}</span>

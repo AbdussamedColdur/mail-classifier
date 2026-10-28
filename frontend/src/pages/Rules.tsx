@@ -56,7 +56,7 @@ export default function Rules() {
         <button type="button" className="btn-p" onClick={() => setEditing('new')}><Ic.Plus />Yeni kural</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+      <div className="kpis">
         <Stat label="Etkin kural" value={all.filter((r) => r.enabled).length} unit={`/ ${all.length}`} />
         <Stat label="Sınıflandırılan · 7 gün" value={classified} unit="e-posta" sub={cats?.items.filter((c) => c.count).map((c) => `${c.category} ${c.count}`).join(' · ')} />
         <Stat label="Geri alınan · 7 gün" value={undone} unit={trig ? `%${Math.round((undone / trig) * 100)}` : ''} />
@@ -77,7 +77,7 @@ export default function Rules() {
       <section aria-label="Kural listesi" className="card" style={{ overflow: 'visible' }}>
         <div style={{ display: 'flex', gap: 16, padding: '7px 16px', background: 'var(--sub)', borderBottom: '1px solid var(--line)', borderRadius: '10px 10px 0 0', fontSize: 11, fontWeight: 500, color: 'var(--mut)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           <span style={{ flex: '0 0 44px' }}>Etkin</span>
-          <span style={{ flex: '1 1 300px' }}>Kural / soru</span>
+          <span style={{ flex: '1 1 200px' }}>Kural / soru</span>
           <span style={{ flex: '0 0 80px' }}>Eşik</span>
           <span style={{ flex: '0 0 160px' }}>İşlem</span>
           <span style={{ flex: '0 0 130px' }}>Mod</span>
@@ -95,7 +95,7 @@ export default function Rules() {
           return (
             <div key={r.id} className="row" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 16px', padding: '12px 16px', borderBottom: '1px solid var(--line)', position: 'relative' }}>
               <span style={{ flex: '0 0 44px' }}><Switch on={r.enabled} label={r.name + (r.enabled ? ' kuralını kapat' : ' kuralını aç')} onClick={() => patch(r, { enabled: !r.enabled })} /></span>
-              <div style={{ flex: '1 1 300px', minWidth: 0, opacity: op }}>
+              <div style={{ flex: '1 1 200px', minWidth: 0, opacity: op }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontWeight: 600 }}>{r.name}</span>
                   <span style={{ fontSize: 11, fontWeight: 500, padding: '0 6px', border: '1px solid var(--line2)', borderRadius: 4, color: 'var(--mut)' }}>{scopeText(r)}</span>

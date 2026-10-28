@@ -82,7 +82,7 @@ export default function Logs() {
         </label>
       </div>
 
-      <section aria-label="Karar ve işlem kayıtları" className="card" style={{ overflow: 'hidden' }}>
+      <section aria-label="Karar ve işlem kayıtları" className="card l-table" style={{ overflow: 'hidden' }}>
         {selIds.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--accSoft)', borderBottom: '1px solid var(--line)' }}>
             <span style={{ fontWeight: 600, color: 'var(--accTx)' }}><span className="num">{selIds.length}</span> kayıt seçili</span>
@@ -91,26 +91,28 @@ export default function Logs() {
             <button className="btn ib" type="button" onClick={() => setSel({})} style={{ height: 30, padding: '0 10px', fontSize: 12, borderRadius: 7 }}>Seçimi temizle</button>
           </div>
         )}
-        <div style={{ overflowX: 'auto' }}>
-          <table className="hov" style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
+        <div>
+          <table className="hov ftable">
             <thead><tr>
-              <th style={{ width: 36 }}><input type="checkbox" aria-label="Görünen tüm kayıtları seç" checked={allSel} onChange={() => setSel((s) => { const n = { ...s }; shown.forEach((r) => { n[r.id] = !allSel }); return n })} /></th>
-              <th>Zaman</th><th>E-posta</th><th>Kural</th><th>Puan</th><th>İşlem</th><th>Durum</th><th style={{ textAlign: 'right' }}>Eylem</th>
+              <th className="c-sel"><input type="checkbox" aria-label="Görünen tüm kayıtları seç" checked={allSel} onChange={() => setSel((s) => { const n = { ...s }; shown.forEach((r) => { n[r.id] = !allSel }); return n })} /></th>
+              <th className="c-time">Zaman</th><th>E-posta</th><th className="c-rule">Kural</th><th className="c-score">Puan</th>
+              <th className="c-ops">İşlem</th><th className="c-status">Durum</th><th className="c-act" style={{ textAlign: 'right' }}>Eylem</th>
             </tr></thead>
             <tbody>
               {shown.map((r) => {
                 const b = statusBadge(r.status)
                 const bg = sel[r.id] ? 'var(--accSoft)' : 'transparent'
+                const ops = opsText(r.ops)
                 return (
                   <tr key={r.id}>
-                    <td style={{ background: bg, padding: '9px 12px' }}><input type="checkbox" aria-label={`${r.subject} kaydını seç`} checked={!!sel[r.id]} onChange={() => setSel((s) => ({ ...s, [r.id]: !s[r.id] }))} /></td>
-                    <td className="num" style={{ background: bg, padding: '9px 12px', whiteSpace: 'nowrap', color: 'var(--mut)', fontSize: 12 }}>{when(r.createdAt)}</td>
-                    <td style={{ background: bg, padding: '9px 12px', maxWidth: 300 }}><div className="ellipsis" style={{ fontWeight: 500 }}>{r.subject}</div><div className="ellipsis" style={{ fontSize: 12, color: 'var(--mut)' }}>{r.from}</div></td>
-                    <td style={{ background: bg, padding: '9px 12px', fontSize: 12, whiteSpace: 'nowrap' }}>{r.source}</td>
-                    <td className="num" style={{ background: bg, padding: '9px 12px', fontWeight: 600, fontSize: 12 }}>{score(r.topScore)}</td>
-                    <td style={{ background: bg, padding: '9px 12px', fontSize: 12, whiteSpace: 'nowrap' }}>{opsText(r.ops)}</td>
-                    <td style={{ background: bg, padding: '9px 12px' }} title={r.error ?? undefined}><span className="badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', background: b.bg, color: b.fg, border: `1px solid ${b.bd ?? 'transparent'}` }}>{b.text}</span></td>
-                    <td style={{ background: bg, padding: '9px 12px', textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>
+                    <td className="c-sel" style={{ background: bg, padding: '9px 12px' }}><input type="checkbox" aria-label={`${r.subject} kaydını seç`} checked={!!sel[r.id]} onChange={() => setSel((s) => ({ ...s, [r.id]: !s[r.id] }))} /></td>
+                    <td className="c-time num" style={{ background: bg, padding: '9px 12px', color: 'var(--mut)', fontSize: 12 }}>{when(r.createdAt)}</td>
+                    <td title={`${r.subject}\n${r.from}`} style={{ background: bg, padding: '9px 12px' }}><div className="ellipsis" style={{ fontWeight: 500 }}>{r.subject}</div><div className="ellipsis" style={{ fontSize: 12, color: 'var(--mut)' }}>{r.from}</div></td>
+                    <td className="c-rule" title={r.source} style={{ background: bg, padding: '9px 12px', fontSize: 12 }}>{r.source}</td>
+                    <td className="c-score num" style={{ background: bg, padding: '9px 12px', fontWeight: 600, fontSize: 12 }}>{score(r.topScore)}</td>
+                    <td className="c-ops" title={ops} style={{ background: bg, padding: '9px 12px', fontSize: 12 }}>{ops}</td>
+                    <td className="c-status" style={{ background: bg, padding: '9px 12px' }} title={r.error ?? undefined}><span className="badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', background: b.bg, color: b.fg, border: `1px solid ${b.bd ?? 'transparent'}` }}>{b.text}</span></td>
+                    <td className="c-act" style={{ background: bg, padding: '9px 12px', textAlign: 'right', fontSize: 12 }}>
                       {r.canUndo ? <button className="lk" type="button" onClick={() => undo([r])}>Geri al</button>
                         : r.status === 'error' ? <button className="lk" type="button" onClick={() => api.retry(r.id).then(load, (e) => toast({ title: 'Tekrar denenemedi', sub: e.message }))}>Tekrar dene</button>
                         : <span style={{ color: 'var(--mut)' }}>—</span>}

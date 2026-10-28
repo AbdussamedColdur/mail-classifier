@@ -92,8 +92,8 @@ export default function Command() {
         <p style={{ margin: '2px 0 0', color: 'var(--mut)' }}>Bir Gmail aramasını seçin, karar modeline her e-posta için aynı soruyu sordurun ve cevaba göre işlem yapın.</p>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
-        <form className="card" onSubmit={(e) => e.preventDefault()} style={{ flex: '2 1 560px', minWidth: 0, padding: '20px 20px 16px' }}>
+      <div className="split-form">
+        <form className="card" onSubmit={(e) => e.preventDefault()} style={{ minWidth: 0, padding: '20px 20px 16px' }}>
           <Step n={1}>
             <label htmlFor="q" style={{ display: 'block', fontWeight: 600, marginBottom: 2 }}>Gmail arama sorgusu</label>
             <div style={{ fontSize: 12, color: 'var(--mut)', marginBottom: 8 }}>Gmail'in arama sözdizimi geçerli. Sorgu yalnızca okunur; hiçbir şey değişmez.</div>
@@ -211,7 +211,7 @@ export default function Command() {
           </div>
         </form>
 
-        <aside aria-label="Görev özeti" className="card" style={{ flex: '1 1 280px', minWidth: 0, padding: 16 }}>
+        <aside aria-label="Görev özeti" className="card side" style={{ padding: 16, display: 'block' }}>
           <h2 className="h2" style={{ marginBottom: 12 }}>Görev özeti</h2>
           <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', gap: '10px 14px', fontSize: 12 }}>
             <Dt>Kapsam</Dt><Dd>{scope !== undefined ? `${nf.format(scope)} e-posta` : 'Önizlenmedi'}</Dd>
